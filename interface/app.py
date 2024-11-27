@@ -11,5 +11,3 @@ app = gr.Interface(
     description="Carregue um vídeo para reproduzi-lo."
 )
 
-if __name__ == "__main__":
-    app.launch()
