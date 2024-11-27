@@ -6,4 +6,3 @@ torchaudio
 opencv-python
 matplotlib
 numpy
-detectron2
