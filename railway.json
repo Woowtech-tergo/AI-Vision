@@ -6,7 +6,7 @@
             "phases": {
                 "install": {
                     "nixPkgs": [
-                        "opencv",
+
                         "libgl",
                         "libglib",
                         "gradio==5.6.0",
