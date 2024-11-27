@@ -1,0 +1,40 @@
+{
+    "$schema": "https://railway.app/railway.schema.json",
+    "build": {
+        "builder": "NIXPACKS",
+        "nixpacks": {
+            "phases": {
+                "install": {
+                    "nixPkgs": [
+                        "opencv",
+                        "libgl",
+                        "libglib",
+                        "gradio==5.6.0",
+                        "torch",
+                        "torchvision",
+                        "torchaudio",
+                        "opencv-python-headless",
+                        "matplotlib",
+                        "numpy"
+
+                    ],
+                    "pythonDependencies": [
+                        "streamlit",
+                        "ultralytics",
+                        "opencv-python-headless",
+                        "gradio==5.6.0",
+                        "torch",
+                        "torchvision",
+                        "torchaudio",
+                        "opencv-python-headless",
+                        "matplotlib",
+                        "numpy"
+                    ]
+                }
+            }
+        }
+    },
+    "deploy": {
+        "startCommand": "streamlit run main.py --server.address 0.0.0.0 --server.port $PORT --server.fileWatcherType none --browser.gatherUsageStats false --client.toolbarMode minimal"
+    }
+}
