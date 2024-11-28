@@ -6,7 +6,7 @@ from pathlib import Path
 from tqdm.auto import tqdm
 
 import deep_sort.deep_sort.deep_sort as ds
-# from deep_sort.deep_sort import deep_sort as ds
+
 import gradio as gr
 
 # Controla se o processamento deve ser interrompido
@@ -48,16 +48,7 @@ def start_processing(input_path, output_path, detect_class, model, progress=gr.P
     return output_video_path, output_video_path
 
 
-def putTextWithBackground(
-        img,
-        text,
-        origin,
-        font=cv2.FONT_HERSHEY_SIMPLEX,
-        font_scale=1,
-        text_color=(255, 255, 255),
-        bg_color=(0, 0, 0),
-        thickness=1,
-):
+def putTextWithBackground(img, text, origin, font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1, text_color=(255, 255, 255), bg_color=(0, 0, 0), thickness=1):
     """Desenha texto com fundo.
 
     :param img: Imagem de entrada.
@@ -245,5 +236,5 @@ if __name__ == "__main__":
                            outputs=[output, output_path])
         stop_button.click(stop_processing)
 
-    demo.launch(server_name="127.0.0.1", server_port=7860, share=True)
+    demo.launch(server_name="0.0.0.0", server_port=7860, share=True)
 
