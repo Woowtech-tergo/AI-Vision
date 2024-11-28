@@ -206,9 +206,23 @@ if __name__ == "__main__":
             with gr.Row():
                 with gr.Column():
                     input_path = gr.Video(label="Vídeo de Entrada")  # Controle para upload de vídeo
-                    model = gr.Dropdown(model_list, value=0, label="Modelo")  # Menu suspenso para seleção de modelo
-                    detect_class = gr.Dropdown(detect_classes, value=0, label="Classe",
-                                               type='index')  # Menu suspenso para seleção de classe alvo
+
+                    model = gr.Dropdown(model_list,
+                                        value=model_list[0],
+                                        label="Modelo")  # Use o primeiro modelo por padrão
+
+                    detect_class = gr.Dropdown(detect_classes,
+                                               value=detect_classes[0],
+                                               label="Classe",
+                                               type='index')  # Use a primeira classe por padrão
+
+                    # model = gr.Dropdown(model_list,
+                    #                     value=0,
+                    #                     label="Modelo")  # Menu suspenso para seleção de modelo
+                    # detect_class = gr.Dropdown(detect_classes,
+                    #                            value=0,
+                    #                            label="Classe",
+                    #                            type='index')  # Menu suspenso para seleção de classe alvo
                     output_dir = gr.Textbox(label="Diretório de Saída",
                                             value=tempfile.mkdtemp())  # Caixa de texto para especificar o diretório de saída
                     with gr.Row():

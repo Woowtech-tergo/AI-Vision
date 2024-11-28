@@ -18,7 +18,8 @@
                         "torchvision",
                         "torchaudio",
                         "matplotlib",
-                        "numpy"
+                        "numpy",
+                        "scipy"
                     ]
                 }
             }
