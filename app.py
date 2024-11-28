@@ -185,7 +185,8 @@ def detect_and_track(input_path: str, output_path: str, detect_class: int, model
 
 if __name__ == "__main__":
     # Lista oficial de modelos YoloV8 e V9. O modelo será baixado automaticamente na primeira execução.
-    model_list = ["yolov9c.pt", "yolov9e", "yolov8n.pt", "yolov8s.pt", "yolov8m.pt", "yolov8l.pt", "yolov8x.pt"]
+    # model_list = ["yolov9c.pt", "yolov9e", "yolov8n.pt", "yolov8s.pt", "yolov8m.pt", "yolov8l.pt", "yolov8x.pt"]
+    model_list = ["yolov9c.pt","yolov8n.pt"]
 
     # Obtém todas as classes detectáveis pelo modelo YoloV8. Por padrão, usa o primeiro modelo da lista.
     detect_classes = get_detectable_classes(model_list[0])
