@@ -150,7 +150,7 @@ def counting_people(video_input):
     return output_path
 
 # Configuração da interface Gradio
-with gr.Blocks() as interface:
+with gr.Blocks() as app:
     gr.Markdown("# Contador de Pessoas em Vídeo")
     gr.Markdown("### Carregue um vídeo ou utilize a webcam para iniciar a contagem de pessoas.")
 
@@ -166,4 +166,4 @@ with gr.Blocks() as interface:
     )
 
 if __name__ == "__main__":
-    interface.launch()
+    app.launch()
