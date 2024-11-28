@@ -1,3 +1,6 @@
 .env
 .venv
 .idea
+*.mp4
+*.avi
+*.pyc

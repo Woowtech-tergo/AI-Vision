@@ -1,102 +1,162 @@
-# from google.colab import drive
-# drive.mount('/content/drive')
-from detectron2.engine import DefaultPredictor
-from detectron2.config import get_cfg
-from detectron2.utils.visualizer import Visualizer
-from detectron2.data import Metadata
-from detectron2 import model_zoo
-
-
-import torch
 import gradio as gr
 import cv2
 import numpy as np
+import torch
 
-# Set up Detectron2 model configuration
-cfg = get_cfg()
-cfg.merge_from_file(model_zoo.get_config_file("COCO-Detection/faster_rcnn_X_101_32x8d_FPN_3x.yaml")) # config file used to train the model
-# cfg.MODEL.WEIGHTS = '/content/drive/My Drive/model_final.pth'  # Path to model weights
-cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.7  # Set threshold for inference
-cfg.MODEL.ROI_HEADS.NUM_CLASSES = 12  # Set number of classes
-cfg.MODEL.DEVICE = "cuda" if torch.cuda.is_available() else "cpu"  # Set device
-predictor = DefaultPredictor(cfg)
+# Importações necessárias para o modelo de contagem de pessoas
+from Modelos.ContadorDePessoasEmVideo import Person
+import time
+from random import randint
 
-# Define class names
-class_names = ['road traffic', 'bicycles', 'buses', 'crosswalks', 'fire hydrants',
-               'motorcycle', 'traffic lights', 'vehicles']
-my_metadata = Metadata()
-my_metadata.set(thing_classes=class_names)
+def counting_people(video_input):
+    # Verifica se o vídeo foi enviado através da interface ou se é um fluxo da webcam
+    if video_input is None:
+        cap = cv2.VideoCapture(0)  # Usa a webcam
+    else:
+        cap = cv2.VideoCapture(video_input)
 
+    # Iniciais
+    leftCounter = 0
+    rightCounter = 0
 
-#=====================================================================
-# CREATE IMAGE/VIDEO PROCESSING FUNCTION AND SET UP GRADIO INTERFACE
-#=====================================================================
+    # Configurações de vídeo
+    w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    frameArea = h * w
+    areaTH = frameArea * 0.003
 
+    # Linhas de detecção
+    leftmostLine = int(1.0 / 6 * w)
+    rightmostLine = int(5.0 / 6 * w)
+    leftmostLimit = int(1.0 / 12 * w)
+    rightmostLimit = int(11.0 / 12 * w)
 
+    # Configurações de cores
+    leftmostLineColor = (255, 0, 0)
+    rightmostLineColor = (0, 0, 255)
+    font = cv2.FONT_HERSHEY_SIMPLEX
 
-# Function to process video frames
-def predict_and_display_frame(frame):
-    im = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convert to RGB format
-    outputs = predictor(im)  # Run object detection
-    v = Visualizer(im[:, :, ::-1], scale=1.0, instance_mode=0, metadata=my_metadata)
-    out = v.draw_instance_predictions(outputs["instances"].to("cpu"))
-    return out.get_image()[:, :, ::-1]  # Return processed frame in RGB format
+    # Subtrator de fundo
+    backgroundSubtractor = cv2.createBackgroundSubtractorMOG2()
 
-def live_tracking(video_input):
-    cap = cv2.VideoCapture(video_input)
+    # Kernels para morfologia
+    kernelOp = np.ones((3, 3), np.uint8)
+    kernelCl = np.ones((9, 9), np.uint8)
+
+    # Variáveis
+    persons = []
+    max_p_age = 5
+    pid = 1
+
+    # Criação do objeto para salvar o vídeo processado
+    output_frames = []
+
     while cap.isOpened():
         ret, frame = cap.read()
+
         if not ret:
             break
-        processed_frame = predict_and_display_frame(frame)  # Process frame
-        yield processed_frame  # Yield processed frame for Gradio
 
-def detect_objects_in_image(image):
-    # Convert the image to the format required by the predictor
-    im = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-    return predict_and_display_frame(im)
+        for per in persons:
+            per.age_one()
 
+        # Subtração de fundo
+        fgmask = backgroundSubtractor.apply(frame)
 
+        # Aplicação de threshold para remover sombras
+        ret2, imBin = cv2.threshold(fgmask, 127, 255, cv2.THRESH_BINARY)
+        # Operações morfológicas
+        mask = cv2.morphologyEx(imBin, cv2.MORPH_OPEN, kernelOp)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernelCl)
 
-# Set up Gradio interface for live tracking
+        # Encontra contornos
+        contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        for cnt in contours:
+            area = cv2.contourArea(cnt)
+            if area > areaTH:
+                # Centro de massa
+                M = cv2.moments(cnt)
+                cx = int(M['m10'] / M['m00'])
+                cy = int(M['m01'] / M['m00'])
+
+                x, y, w, h = cv2.boundingRect(cnt)
+
+                newPerson = True
+                if leftmostLimit <= cx <= rightmostLimit:
+                    for person in persons:
+                        if abs(x - person.getX()) <= w and abs(y - person.getY()) <= h:
+                            newPerson = False
+                            person.updateCoords(cx, cy)
+
+                            if person.goingLeft(rightmostLine, leftmostLine):
+                                leftCounter += 1
+                            elif person.goingRight(rightmostLine, leftmostLine):
+                                rightCounter += 1
+                            break
+
+                        if person.getState() == '1':
+                            if person.getDir() == 'right' and person.getX() > rightmostLimit:
+                                person.setDone()
+                            elif person.getDir() == 'left' and person.getX() < leftmostLimit:
+                                person.setDone()
+
+                        if person.timedOut():
+                            index = persons.index(person)
+                            persons.pop(index)
+                            del person
+
+                    if newPerson:
+                        person = Person(pid, cx, cy, max_p_age)
+                        persons.append(person)
+                        pid += 1
+
+                cv2.circle(frame, (cx, cy), 5, (0, 0, 255), -1)
+                img = cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+
+        # Informações no frame
+        leftMsg = 'Left: ' + str(leftCounter)
+        rightMsg = 'Right: ' + str(rightCounter)
+        cv2.polylines(frame, [np.array([[rightmostLine, 0], [rightmostLine, h]])], False, rightmostLineColor, thickness=2)
+        cv2.polylines(frame, [np.array([[leftmostLine, 0], [leftmostLine, h]])], False, leftmostLineColor, thickness=2)
+        cv2.putText(frame, leftMsg, (10, 40), font, 0.5, leftmostLineColor, 1, cv2.LINE_AA)
+        cv2.putText(frame, rightMsg, (10, 90), font, 0.5, rightmostLineColor, 1, cv2.LINE_AA)
+
+        # Armazena o frame processado
+        output_frames.append(frame)
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+    # Salva o vídeo processado em um arquivo temporário
+    output_path = 'output.avi'
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    fps = 20  # Pode ajustar conforme necessário
+    height, width, layers = output_frames[0].shape
+    out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+
+    for frame in output_frames:
+        out.write(frame)
+
+    out.release()
+
+    return output_path
+
+# Configuração da interface Gradio
 with gr.Blocks() as interface:
-    gr.Markdown("# Live Object Detection with Detectron2")
-    gr.Markdown("### Capture from your webcam, upload a video file, or upload an image")
+    gr.Markdown("# Contador de Pessoas em Vídeo")
+    gr.Markdown("### Carregue um vídeo ou utilize a webcam para iniciar a contagem de pessoas.")
 
-    with gr.Row():
-        video_input = gr.Video(label="Input Video")  # Video input
-        start_button = gr.Button("Detect Objects from Uploaded Video")
+    video_input = gr.Video(label="Selecione um Vídeo ou use a Webcam", source=["upload", "webcam"])
+    output_video = gr.Video(label="Vídeo Processado")
 
-    with gr.Row():
-        image_input = gr.Image(label="Input Image", type="pil")  # Image input
-        detect_button = gr.Button("Detect Objects in Image")
-
-    with gr.Row():
-        output_image_video = gr.Image(label="Processed Video Output", type="numpy")  # Output for video
-        output_image_img = gr.Image(label="Processed Image Output", type="numpy")  # Output for image
+    start_button = gr.Button("Iniciar Contagem de Pessoas")
 
     start_button.click(
-        live_tracking,
+        fn=counting_people,
         inputs=video_input,
-        outputs=output_image_video
+        outputs=output_video
     )
 
-    detect_button.click(
-        detect_objects_in_image,
-        inputs=image_input,
-        outputs=output_image_img
-    )
-
-    gr.Markdown("### Instructions:")
-    gr.Markdown("1. Choose to capture from your webcam or upload a video file.")
-    gr.Markdown("2. Click the 'Start Detection' button to begin object detection on the video.")
-    gr.Markdown("3. Upload an image and click 'Detect Objects in Image' to process it.")
-
-# Launch the Gradio app
-interface.launch(debug=True)
-
-
-
-
-
-
+if __name__ == "__main__":
+    interface.launch()
