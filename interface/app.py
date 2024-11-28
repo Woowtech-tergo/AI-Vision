@@ -2,9 +2,10 @@ import gradio as gr
 import cv2
 import numpy as np
 import torch
+import os
 
 # Importações necessárias para o modelo de contagem de pessoas
-from Modelos.ContadorDePessoasEmVideo import Person
+from Modelos.ContadorDePessoasEmVideo.Person import Person
 import time
 from random import randint
 
@@ -13,7 +14,13 @@ def counting_people(video_input):
     if video_input is None:
         cap = cv2.VideoCapture(0)  # Usa a webcam
     else:
-        cap = cv2.VideoCapture(video_input)
+        # Se o vídeo for um arquivo, precisamos garantir que o caminho está correto
+        if isinstance(video_input, str):
+            video_path = video_input
+        else:
+            # Se for um objeto do Gradio, obtemos o caminho temporário do arquivo
+            video_path = video_input.name
+        cap = cv2.VideoCapture(video_path)
 
     # Iniciais
     leftCounter = 0
@@ -129,8 +136,8 @@ def counting_people(video_input):
     cv2.destroyAllWindows()
 
     # Salva o vídeo processado em um arquivo temporário
-    output_path = 'output.avi'
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    output_path = 'output.mp4'
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     fps = 20  # Pode ajustar conforme necessário
     height, width, layers = output_frames[0].shape
     out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
@@ -147,7 +154,7 @@ with gr.Blocks() as interface:
     gr.Markdown("# Contador de Pessoas em Vídeo")
     gr.Markdown("### Carregue um vídeo ou utilize a webcam para iniciar a contagem de pessoas.")
 
-    video_input = gr.Video(label="Selecione um Vídeo ou use a Webcam", source=["upload", "webcam"])
+    video_input = gr.Video(label="Selecione um Vídeo ou use a Webcam", sources=["upload", "webcam"])
     output_video = gr.Video(label="Vídeo Processado")
 
     start_button = gr.Button("Iniciar Contagem de Pessoas")
