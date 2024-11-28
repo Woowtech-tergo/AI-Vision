@@ -12,23 +12,35 @@ from random import randint
 def counting_people(video_input):
     # Verifica se o vídeo foi enviado através da interface ou se é um fluxo da webcam
     if video_input is None:
-        cap = cv2.VideoCapture(0)  # Usa a webcam
+        return "Nenhum vídeo fornecido."
     else:
-        # Se o vídeo for um arquivo, precisamos garantir que o caminho está correto
+        # Verifica se o vídeo é um caminho válido
         if isinstance(video_input, str):
             video_path = video_input
         else:
             # Se for um objeto do Gradio, obtemos o caminho temporário do arquivo
             video_path = video_input.name
+
+        # Verifica se o arquivo existe
+        if not os.path.exists(video_path):
+            return "Arquivo de vídeo não encontrado."
+
         cap = cv2.VideoCapture(video_path)
 
     # Iniciais
     leftCounter = 0
     rightCounter = 0
 
+    # Verifica se a captura foi aberta corretamente
+    if not cap.isOpened():
+        return "Não foi possível abrir o vídeo."
+
     # Configurações de vídeo
     w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    if w == 0 or h == 0:
+        return "Não foi possível obter as dimensões do vídeo."
+
     frameArea = h * w
     areaTH = frameArea * 0.003
 
@@ -84,15 +96,17 @@ def counting_people(video_input):
             if area > areaTH:
                 # Centro de massa
                 M = cv2.moments(cnt)
+                if M['m00'] == 0:
+                    continue
                 cx = int(M['m10'] / M['m00'])
                 cy = int(M['m01'] / M['m00'])
 
-                x, y, w, h = cv2.boundingRect(cnt)
+                x, y, w_box, h_box = cv2.boundingRect(cnt)
 
                 newPerson = True
                 if leftmostLimit <= cx <= rightmostLimit:
                     for person in persons:
-                        if abs(x - person.getX()) <= w and abs(y - person.getY()) <= h:
+                        if abs(x - person.getX()) <= w_box and abs(y - person.getY()) <= h_box:
                             newPerson = False
                             person.updateCoords(cx, cy)
 
@@ -119,7 +133,7 @@ def counting_people(video_input):
                         pid += 1
 
                 cv2.circle(frame, (cx, cy), 5, (0, 0, 255), -1)
-                img = cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+                img = cv2.rectangle(frame, (x, y), (x + w_box, y + h_box), (255, 0, 0), 2)
 
         # Informações no frame
         leftMsg = 'Left: ' + str(leftCounter)
@@ -133,7 +147,10 @@ def counting_people(video_input):
         output_frames.append(frame)
 
     cap.release()
-    cv2.destroyAllWindows()
+    # cv2.destroyAllWindows()
+
+    if not output_frames:
+        return "Nenhum frame foi processado."
 
     # Salva o vídeo processado em um arquivo temporário
     output_path = 'output.mp4'
@@ -150,20 +167,25 @@ def counting_people(video_input):
     return output_path
 
 # Configuração da interface Gradio
-with gr.Blocks() as app:
-    gr.Markdown("# Contador de Pessoas em Vídeo")
-    gr.Markdown("### Carregue um vídeo ou utilize a webcam para iniciar a contagem de pessoas.")
+def create_app():
+    with gr.Blocks() as app:
+        gr.Markdown("# Contador de Pessoas em Vídeo")
+        gr.Markdown("### Carregue um vídeo para iniciar a contagem de pessoas.")
 
-    video_input = gr.Video(label="Selecione um Vídeo ou use a Webcam", sources=["upload", "webcam"])
-    output_video = gr.Video(label="Vídeo Processado")
+        with gr.Row():
+            video_input = gr.Video(label="Selecione um Vídeo")
+            output_video = gr.Video(label="Vídeo Processado")
+        start_button = gr.Button("Iniciar Contagem de Pessoas")
 
-    start_button = gr.Button("Iniciar Contagem de Pessoas")
+        start_button.click(
+            fn=counting_people,
+            inputs=video_input,
+            outputs=output_video
+        )
 
-    start_button.click(
-        fn=counting_people,
-        inputs=video_input,
-        outputs=output_video
-    )
+    return app
+
+app = create_app()
 
 if __name__ == "__main__":
     app.launch()
