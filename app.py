@@ -245,4 +245,5 @@ if __name__ == "__main__":
                            outputs=[output, output_path])
         stop_button.click(stop_processing)
 
-    demo.launch()
+    demo.launch(server_name="0.0.0.0", server_port=7860, share=True)
+
