@@ -5,8 +5,8 @@ import tempfile
 from pathlib import Path
 from tqdm.auto import tqdm
 
-# import deep_sort.deep_sort.deep_sort as ds
-from deep_sort.deep_sort import deep_sort as ds
+import deep_sort.deep_sort.deep_sort as ds
+# from deep_sort.deep_sort import deep_sort as ds
 import gradio as gr
 
 # Controla se o processamento deve ser interrompido
