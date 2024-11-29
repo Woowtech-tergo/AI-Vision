@@ -1,7 +1,8 @@
+# yolo_deepsort.py
+
 from ultralytics import YOLO
 import cv2
 import numpy as np
-import tempfile
 from pathlib import Path
 from tqdm.auto import tqdm
 import gradio as gr
@@ -10,6 +11,9 @@ import deep_sort.deep_sort.deep_sort as ds
 # Controla se o processamento deve ser interrompido
 should_continue = True
 
+# Variáveis globais para modelo e tracker
+model = None
+tracker = None
 
 def get_detectable_classes(model_file):
     """Obtém as classes detectáveis de um arquivo de modelo fornecido.
@@ -20,35 +24,41 @@ def get_detectable_classes(model_file):
     Retorna:
     - class_names: Lista dos nomes das classes detectáveis.
     """
-    model = YOLO(model_file)
+    global model
+    if model is None:
+        model = YOLO(model_file)
     class_names = list(model.names.values())  # Obtém diretamente a lista de nomes das classes
-    del model  # Exclui a instância do modelo para liberar recursos
     return class_names
-
 
 # Função para interromper o processamento de vídeo
 def stop_processing():
     global should_continue
     should_continue = False  # Altera a variável global para parar o processamento
-    return "Tentando interromper o processamento..."
-
+    return "Processamento interrompido."
 
 # Função para iniciar o processamento de vídeo
-def start_processing(input_path, output_path, detect_class, model, progress=gr.Progress(track_tqdm=True)):
-    global should_continue
+def start_processing(input_data, output_path, detect_class, model_file, progress=gr.Progress(track_tqdm=True)):
+    global should_continue, model, tracker
     should_continue = True
 
     # Obter a lista de classes detectáveis
-    detect_classes = get_detectable_classes(model)
+    detect_classes = get_detectable_classes(model_file)
     # Encontrar o índice da classe selecionada
     detect_class_index = detect_classes.index(detect_class)
 
-    model = YOLO(model)
-    tracker = ds.DeepSort("deep_sort/deep_sort/deep/checkpoint/ckpt.t7")
-    # Passar o índice em vez do nome da classe
-    output_video_path = detect_and_track(input_path, output_path, detect_class_index, model, tracker)
-    return output_video_path, output_video_path
+    if model is None:
+        model = YOLO(model_file)
+    if tracker is None:
+        tracker = ds.DeepSort("deep_sort/deep_sort/deep/checkpoint/ckpt.t7")
 
+    if isinstance(input_data, str):
+        # Input é um arquivo de vídeo
+        output_video_path = detect_and_track(input_data, output_path, detect_class_index, model, tracker)
+        return output_video_path, output_video_path
+    else:
+        # Input é um frame da webcam
+        # O processamento é feito em tempo real na função process_webcam_frame
+        return None, None
 
 def putTextWithBackground(img, text, origin, font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1, text_color=(255, 255, 255),
                           bg_color=(0, 0, 0), thickness=1):
@@ -84,30 +94,23 @@ def putTextWithBackground(img, text, origin, font=cv2.FONT_HERSHEY_SIMPLEX, font
         lineType=cv2.LINE_AA,
     )
 
-
 def extract_detections(results, detect_class_index):
     """
     Extrai e processa informações de detecção dos resultados do modelo.
-    - results: Resultados da previsão do modelo YoloV8, incluindo posição, categoria e confiança dos objetos detectados.
+    - results: Resultados da previsão do modelo YOLOv8.
     - detect_class_index: Índice da classe alvo a ser extraída.
     """
-    # Inicializa um array numpy bidimensional vazio para armazenar as posições dos objetos detectados
     detections = np.empty((0, 4))
+    confarray = []
 
-    confarray = []  # Inicializa uma lista vazia para armazenar os valores de confiança dos objetos detectados.
-
-    # Itera sobre os resultados das detecções
     for r in results:
         for box in r.boxes:
-            # Verifica se a classe detectada corresponde à classe desejada e extrai informações
             if box.cls[0].int() == detect_class_index:
-                x1, y1, x2, y2 = box.xywh[0].int().tolist()  # Extrai as posições e converte para lista de inteiros.
-                conf = round(box.conf[0].item(), 2)  # Extrai a confiança e arredonda para duas casas decimais.
-                detections = np.vstack(
-                    (detections, np.array([x1, y1, x2, y2])))  # Adiciona as posições ao array de detecções.
-                confarray.append(conf)  # Adiciona a confiança à lista.
-    return detections, confarray  # Retorna as posições e as confianças.
-
+                x1, y1, x2, y2 = box.xywh[0].int().tolist()
+                conf = round(box.conf[0].item(), 2)
+                detections = np.vstack((detections, np.array([x1, y1, x2, y2])))
+                confarray.append(conf)
+    return detections, confarray
 
 # Processamento de vídeo
 def detect_and_track(input_path: str, output_path: str, detect_class_index: int, model, tracker) -> Path:
@@ -157,8 +160,8 @@ def detect_and_track(input_path: str, output_path: str, detect_class_index: int,
             print("Fim do vídeo ou erro ao ler o frame")
             break
 
-        # Realiza a detecção de objetos no quadro atual utilizando o modelo YoloV8.
-        results = model(frame, stream=True)
+        # Realiza a detecção de objetos no quadro atual utilizando o modelo YOLOv8.
+        results = model(frame)
 
         # Extrai informações de detecção dos resultados.
         detections, confarray = extract_detections(results, detect_class_index)
@@ -190,3 +193,49 @@ def detect_and_track(input_path: str, output_path: str, detect_class_index: int,
     print(f"Processamento concluído. Total de frames processados: {frame_count}")
     print(f"O diretório de saída é: {output_video_path}")
     return output_video_path
+
+# Função para processar frames da webcam
+def process_webcam_frame(image, detect_class, model_file):
+    """Processa um frame da webcam."""
+    global model, tracker
+
+    # Obter a lista de classes detectáveis
+    detect_classes = get_detectable_classes(model_file)
+    # Encontrar o índice da classe selecionada
+    detect_class_index = detect_classes.index(detect_class)
+
+    if model is None:
+        model = YOLO(model_file)
+    if tracker is None:
+        tracker = ds.DeepSort("deep_sort/deep_sort/deep/checkpoint/ckpt.t7")
+
+    # Converte a imagem para o formato correto
+    frame = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+
+    # Realiza a detecção de objetos no quadro atual utilizando o modelo YOLOv8.
+    results = model(frame)
+
+    # Extrai informações de detecção dos resultados.
+    detections, confarray = extract_detections(results, detect_class_index)
+
+    # Realiza o rastreamento dos objetos detectados com o modelo DeepSort.
+    resultsTracker = tracker.update(detections, confarray, frame)
+
+    for x1, y1, x2, y2, Id in resultsTracker:
+        x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])  # Converte as posições para inteiros.
+
+        # Desenha bounding boxes e texto
+        cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 255), 3)
+        putTextWithBackground(
+            frame,
+            str(int(Id)),
+            (max(-10, x1), max(40, y1)),
+            font_scale=1.5,
+            text_color=(255, 255, 255),
+            bg_color=(255, 0, 255),
+        )
+
+    # Converte a imagem de volta para RGB
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+    return frame

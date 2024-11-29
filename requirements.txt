@@ -9,7 +9,12 @@ opencv-contrib-python-headless
 matplotlib
 numpy
 python-dotenv
+onnxruntime
+# onnxruntime-gpu
+twilio
+
 
 # WebUI ---------------------------------------
 tqdm
 gradio==5.7.0
+gradio-webrtc
