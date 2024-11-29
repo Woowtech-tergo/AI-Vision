@@ -7,12 +7,12 @@ import logging
 from .model import Net
 
 '''
-特征提取器：
-提取对应bounding box中的特征, 得到一个固定维度的embedding作为该bounding box的代表，
-供计算相似度时使用。
+Extrator de Características:
+Extrai as características da bounding box correspondente, obtendo um embedding de dimensão fixa que representa essa bounding box, para ser usado no cálculo de similaridade.
 
-模型训练是按照传统ReID的方法进行，使用Extractor类的时候输入为一个list的图片，得到图片对应的特征。
+O treinamento do modelo é feito de acordo com o método tradicional de ReID (Re-Identification). Ao usar a classe Extractor, a entrada é uma lista de imagens, e obtém-se as características correspondentes das imagens.
 '''
+
 
 class Extractor(object):
     def __init__(self, model_path, use_cuda=True):
@@ -21,34 +21,35 @@ class Extractor(object):
         state_dict = torch.load(model_path, map_location=lambda storage, loc: storage)['net_dict']
         self.net.load_state_dict(state_dict)
         logger = logging.getLogger("root.tracker")
-        logger.info("Loading weights from {}... Done!".format(model_path))
+        logger.info("Carregando pesos de {}... Feito!".format(model_path))
         self.net.to(self.device)
         self.size = (64, 128)
         self.norm = transforms.Compose([
-            # RGB图片数据范围是[0-255]，需要先经过ToTensor除以255归一化到[0,1]之后，
-            # 再通过Normalize计算(x - mean)/std后，将数据归一化到[-1,1]。
+            # O intervalo de dados da imagem RGB é [0-255], precisamos primeiro usar ToTensor para dividir por 255 e normalizar para [0,1],
+            # Em seguida, usar Normalize para calcular (x - mean)/std, normalizando os dados para [-1,1].
             transforms.ToTensor(),
-            # mean=[0.485, 0.456, 0.406] and std=[0.229, 0.224, 0.225]是从imagenet训练集中算出来的
+            # mean=[0.485, 0.456, 0.406] e std=[0.229, 0.224, 0.225] são calculados a partir do conjunto de treinamento ImageNet
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
         ])
-        
+
     def _preprocess(self, im_crops):
         """
         TODO:
-            1. to float with scale from 0 to 1
-            2. resize to (64, 128) as Market1501 dataset did
-            3. concatenate to a numpy array
-            3. to torch Tensor
-            4. normalize
+            1. converter para float com escala de 0 a 1
+            2. redimensionar para (64, 128) como no conjunto de dados Market1501
+            3. concatenar em um array numpy
+            3. converter para Tensor do PyTorch
+            4. normalizar
         """
+
         def _resize(im, size):
-            return cv2.resize(im.astype(np.float32)/255., size)
+            return cv2.resize(im.astype(np.float32) / 255., size)
 
         im_batch = torch.cat([self.norm(_resize(im, self.size)).unsqueeze(0) for im in im_crops], dim=0).float()
         return im_batch
 
-# __call__()是一个非常特殊的实例方法。该方法的功能类似于在类中重载 () 运算符，
-# 使得类实例对象可以像调用普通函数那样，以“对象名()”的形式使用。
+    # __call__() é um método de instância muito especial. Sua função é semelhante a sobrecarregar o operador (),
+    # permitindo que a instância da classe seja usada como uma função comum, usando a forma 'nome_do_objeto()'.
     def __call__(self, im_crops):
         im_batch = self._preprocess(im_crops)
         with torch.no_grad():
@@ -58,8 +59,7 @@ class Extractor(object):
 
 
 if __name__ == '__main__':
-    img = cv2.imread("demo.jpg")[:,:,(2,1,0)]
+    img = cv2.imread("demo.jpg")[:, :, (2, 1, 0)]
     extr = Extractor("checkpoint/ckpt.t7")
     feature = extr(img)
     print(feature.shape)
-

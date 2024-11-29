@@ -3,31 +3,31 @@ from __future__ import absolute_import
 import numpy as np
 from . import linear_assignment
 
-#计算两个框的IOU
+# Calcula o IOU (Intersection Over Union) entre dois boxes
 def iou(bbox, candidates):
-    """Computer intersection over union.
+    """Calcula a interseção sobre a união.
 
-    Parameters
+    Parâmetros
     ----------
     bbox : ndarray
-        A bounding box in format `(top left x, top left y, width, height)`.
+        Uma bounding box no formato `(top left x, top left y, width, height)`.
     candidates : ndarray
-        A matrix of candidate bounding boxes (one per row) in the same format
-        as `bbox`.
+        Uma matriz de bounding boxes candidatas (uma por linha) no mesmo formato
+        que `bbox`.
 
-    Returns
+    Retorna
     -------
     ndarray
-        The intersection over union in [0, 1] between the `bbox` and each
-        candidate. A higher score means a larger fraction of the `bbox` is
-        occluded by the candidate.
+        A interseção sobre a união em [0, 1] entre o `bbox` e cada
+        candidato. Um valor mais alto significa que uma fração maior do `bbox`
+        é coberta pelo candidato.
 
     """
     bbox_tl, bbox_br = bbox[:2], bbox[:2] + bbox[2:]
     candidates_tl = candidates[:, :2]
     candidates_br = candidates[:, :2] + candidates[:, 2:]
 
-    # np.c_ Translates slice objects to concatenation along the second axis.
+    # np.c_ traduz objetos slice para concatenação ao longo do segundo eixo.
     tl = np.c_[np.maximum(bbox_tl[0], candidates_tl[:, 0])[:, np.newaxis],
                np.maximum(bbox_tl[1], candidates_tl[:, 1])[:, np.newaxis]]
     br = np.c_[np.minimum(bbox_br[0], candidates_br[:, 0])[:, np.newaxis],
@@ -39,31 +39,31 @@ def iou(bbox, candidates):
     area_candidates = candidates[:, 2:].prod(axis=1)
     return area_intersection / (area_bbox + area_candidates - area_intersection)
 
-# 计算tracks和detections之间的IOU距离成本矩阵
+# Calcula a matriz de custo de distância IOU entre tracks e detections
 def iou_cost(tracks, detections, track_indices=None,
              detection_indices=None):
-    """An intersection over union distance metric.
+    """Uma métrica de distância baseada em interseção sobre união.
 
-    用于计算tracks和detections之间的iou距离矩阵
+    Utilizada para calcular a matriz de distância IOU entre tracks e detections
 
-    Parameters
+    Parâmetros
     ----------
     tracks : List[deep_sort.track.Track]
-        A list of tracks.
+        Uma lista de tracks.
     detections : List[deep_sort.detection.Detection]
-        A list of detections.
+        Uma lista de detections.
     track_indices : Optional[List[int]]
-        A list of indices to tracks that should be matched. Defaults to
-        all `tracks`.
+        Uma lista de índices das tracks que devem ser associadas. Padrão é
+        todas as `tracks`.
     detection_indices : Optional[List[int]]
-        A list of indices to detections that should be matched. Defaults
-        to all `detections`.
+        Uma lista de índices das detections que devem ser associadas. Padrão
+        é todas as `detections`.
 
-    Returns
+    Retorna
     -------
     ndarray
-        Returns a cost matrix of shape
-        len(track_indices), len(detection_indices) where entry (i, j) is
+        Retorna uma matriz de custo com forma
+        len(track_indices), len(detection_indices) onde a entrada (i, j) é
         `1 - iou(tracks[track_indices[i]], detections[detection_indices[j]])`.
 
     """

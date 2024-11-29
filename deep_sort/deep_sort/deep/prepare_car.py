@@ -4,107 +4,108 @@ import os
 from PIL import Image
 from shutil import copyfile, copytree, rmtree, move
 
-PATH_DATASET = './car-dataset' # 需要处理的文件夹
-PATH_NEW_DATASET = './car-reid-dataset' # 处理后的文件夹
+PATH_DATASET = './car-dataset'  # Pasta que precisa ser processada
+PATH_NEW_DATASET = './car-reid-dataset'  # Pasta após o processamento
 PATH_ALL_IMAGES = PATH_NEW_DATASET + '/all_images'
 PATH_TRAIN = PATH_NEW_DATASET + '/train'
 PATH_TEST = PATH_NEW_DATASET + '/test'
 
-# 定义创建目录函数
+# Define a função para criar diretórios
 def mymkdir(path):
-    path = path.strip() # 去除首位空格
-    path = path.rstrip("\\") # 去除尾部 \ 符号
-    isExists = os.path.exists(path) # 判断路径是否存在
+    path = path.strip()  # Remove espaços em branco no início e no fim
+    path = path.rstrip("\\")  # Remove o símbolo '\' no final
+    isExists = os.path.exists(path)  # Verifica se o caminho existe
     if not isExists:
-        os.makedirs(path) # 如果不存在则创建目录
-        print(path + ' 创建成功')
+        os.makedirs(path)  # Se não existir, cria o diretório
+        print(path + ' criado com sucesso')
         return True
     else:
-        # 如果目录存在则不创建，并提示目录已存在
-        print(path + ' 目录已存在')
+        # Se o diretório já existir, não cria e informa que já existe
+        print(path + ' diretório já existe')
         return False
 
 class BatchRename():
     '''
-    批量重命名文件夹中的图片文件
+    Renomeia em lote os arquivos de imagem em uma pasta
     '''
 
     def __init__(self):
-        self.path = PATH_DATASET # 表示需要命名处理的文件夹
+        self.path = PATH_DATASET  # Indica a pasta que precisa ser processada
 
-    # 修改图像尺寸
+    # Modifica o tamanho das imagens
     def resize(self):
         for aroot, dirs, files in os.walk(self.path):
-            # aroot是self.path目录下的所有子目录（含self.path）,dir是self.path下所有的文件夹的列表.
-            filelist = files  # 注意此处仅是该路径下的其中一个列表
+            # aroot é todos os subdiretórios (incluindo self.path) sob self.path, dirs é a lista de todas as pastas em self.path
+            filelist = files  # Note que isso é apenas uma lista em um dos caminhos
             # print('list', list)
 
-            # filelist = os.listdir(self.path) #获取文件路径
-            total_num = len(filelist)  # 获取文件长度（个数）
+            # filelist = os.listdir(self.path)  # Obtém o caminho dos arquivos
+            total_num = len(filelist)  # Obtém o número total de arquivos
 
             for item in filelist:
-                if item.endswith('.jpg'):  # 初始的图片的格式为jpg格式的（或者源文件是png格式及其他格式，后面的转换格式就可以调整为自己需要的格式即可）
+                if item.endswith('.jpg'):  # As imagens iniciais estão no formato jpg (ou se os arquivos originais estão em png ou outro formato, ajuste o formato conforme necessário)
                     src = os.path.join(os.path.abspath(aroot), item)
 
-                    # 修改图片尺寸到128宽*256高
+                    # Modifica o tamanho da imagem para largura 128 * altura 256
                     im = Image.open(src)
-                    out = im.resize((128, 256), Image.ANTIALIAS)  # resize image with high-quality
-                    out.save(src)  # 原路径保存
+                    out = im.resize((128, 256), Image.ANTIALIAS)  # Redimensiona a imagem com alta qualidade
+                    out.save(src)  # Salva no caminho original
 
     def rename(self):
 
         for aroot, dirs, files in os.walk(self.path):
-            # aroot是self.path目录下的所有子目录（含self.path）,dir是self.path下所有的文件夹的列表.
-            filelist = files  # 注意此处仅是该路径下的其中一个列表
+            # aroot é todos os subdiretórios (incluindo self.path) sob self.path, dirs é a lista de todas as pastas em self.path
+            filelist = files  # Note que isso é apenas uma lista em um dos caminhos
             # print('list', list)
 
-            # filelist = os.listdir(self.path) #获取文件路径
-            total_num = len(filelist)  # 获取文件长度（个数）
+            # filelist = os.listdir(self.path)  # Obtém o caminho dos arquivos
+            total_num = len(filelist)  # Obtém o número total de arquivos
 
-            i = 1  # 表示文件的命名是从1开始的
+            i = 1  # Indica que a nomeação dos arquivos começa a partir de 1
             for item in filelist:
-                if item.endswith('.jpg'):  # 初始的图片的格式为jpg格式的（或者源文件是png格式及其他格式，后面的转换格式就可以调整为自己需要的格式即可）
+                if item.endswith('.jpg'):  # As imagens iniciais estão no formato jpg (ou se os arquivos originais estão em png ou outro formato, ajuste o formato conforme necessário)
                     src = os.path.join(os.path.abspath(aroot), item)
 
-                    # 根据图片名创建图片目录
+                    # Cria diretório de imagem com base no nome da imagem
                     dirname = str(item.split('_')[0])
-                    # 为相同车辆创建目录
-                    #new_dir = os.path.join(self.path, '..', 'bbox_all', dirname)
+                    # Cria diretório para o mesmo veículo
+                    # new_dir = os.path.join(self.path, '..', 'bbox_all', dirname)
                     new_dir = os.path.join(PATH_ALL_IMAGES, dirname)
                     if not os.path.isdir(new_dir):
                         mymkdir(new_dir)
 
-                    # 获得new_dir中的图片数
+                    # Obtém o número de imagens em new_dir
                     num_pic = len(os.listdir(new_dir))
 
                     dst = os.path.join(os.path.abspath(new_dir),
                                        dirname + 'C1T0001F' + str(num_pic + 1) + '.jpg')
-                    # 处理后的格式也为jpg格式的，当然这里可以改成png格式    C1T0001F见mars.py filenames 相机ID，跟踪指数
-                    # dst = os.path.join(os.path.abspath(self.path), '0000' + format(str(i), '0>3s') + '.jpg')    这种情况下的命名格式为0000000.jpg形式，可以自主定义想要的格式
+                    # O formato após o processamento também é jpg; você pode alterar para png se desejar
+                    # 'C1T0001F' refere-se ao ID da câmera e índice de rastreamento, veja mars.py filenames
+                    # dst = os.path.join(os.path.abspath(self.path), '0000' + format(str(i), '0>3s') + '.jpg')  # Neste caso, o formato de nomeação é 0000000.jpg, você pode definir o formato que desejar
                     try:
-                        copyfile(src, dst) #os.rename(src, dst)
-                        print ('converting %s to %s ...' % (src, dst))
+                        copyfile(src, dst)  # os.rename(src, dst)
+                        print('convertendo %s para %s ...' % (src, dst))
                         i = i + 1
                     except:
                         continue
-            print ('total %d to rename & converted %d jpgs' % (total_num, i))
-            
+            print('total de %d para renomear & convertido %d jpgs' % (total_num, i))
+
     def split(self):
-        #---------------------------------------
-        #train_test
+        # ---------------------------------------
+        # Divisão em treino e teste
         images_path = PATH_ALL_IMAGES
         train_save_path = PATH_TRAIN
         test_save_path = PATH_TEST
         if not os.path.isdir(train_save_path):
             os.mkdir(train_save_path)
             os.mkdir(test_save_path)
-        
+
         for _, dirs, _ in os.walk(images_path, topdown=True):
             for i, dir in enumerate(dirs):
                 for root, _, files in os.walk(images_path + '/' + dir, topdown=True):
                     for j, file in enumerate(files):
-                        if(j==0): # test dataset；每个车辆的第一幅图片
-                            print("序号：%s  文件夹： %s  图片：%s 归为测试集" % (i + 1, root, file))
+                        if(j == 0):  # Conjunto de teste; primeira imagem de cada veículo
+                            print("Número: %s  Pasta: %s  Imagem: %s classificada como conjunto de teste" % (i + 1, root, file))
                             src_path = root + '/' + file
                             dst_dir = test_save_path + '/' + dir
                             if not os.path.isdir(dst_dir):
@@ -119,11 +120,9 @@ class BatchRename():
                             dst_path = dst_dir + '/' + file
                             move(src_path, dst_path)
         rmtree(PATH_ALL_IMAGES)
-        
+
 if __name__ == '__main__':
     demo = BatchRename()
     demo.resize()
     demo.rename()
     demo.split()
-
-

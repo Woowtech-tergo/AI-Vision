@@ -4,25 +4,25 @@ import numpy as np
 
 class Detection(object):
     """
-    This class represents a bounding box detection in a single image.
+    Esta classe representa uma detecção de caixa delimitadora (bounding box) em uma única imagem.
 
-    Parameters
+    Parâmetros
     ----------
     tlwh : array_like
-        Bounding box in format `(top left x, top left y, width, height)`.
+        Caixa delimitadora no formato `(x superior esquerdo, y superior esquerdo, largura, altura)`.
     confidence : float
-        Detector confidence score.
+        Pontuação de confiança do detector.
     feature : array_like
-        A feature vector that describes the object contained in this image.
+        Um vetor de características que descreve o objeto contido nesta imagem.
 
-    Attributes
+    Atributos
     ----------
     tlwh : ndarray
-        Bounding box in format `(top left x, top left y, width, height)`.
+        Caixa delimitadora no formato `(x superior esquerdo, y superior esquerdo, largura, altura)`.
     confidence : ndarray
-        Detector confidence score.
+        Pontuação de confiança do detector.
     feature : ndarray | NoneType
-        A feature vector that describes the object contained in this image.
+        Um vetor de características que descreve o objeto contido nesta imagem.
 
     """
 
@@ -32,16 +32,16 @@ class Detection(object):
         self.feature = np.asarray(feature, dtype=np.float32)
 
     def to_tlbr(self):
-        """Convert bounding box to format `(min x, min y, max x, max y)`, i.e.,
-        `(top left, bottom right)`.
+        """Converte a caixa delimitadora para o formato `(x mínimo, y mínimo, x máximo, y máximo)`, ou seja,
+        `(superior esquerdo, inferior direito)`.
         """
         ret = self.tlwh.copy()
         ret[2:] += ret[:2]
         return ret
 
     def to_xyah(self):
-        """Convert bounding box to format `(center x, center y, aspect ratio,
-        height)`, where the aspect ratio is `width / height`.
+        """Converte a caixa delimitadora para o formato `(x central, y central, proporção de aspecto,
+        altura)`, onde a proporção de aspecto é `largura / altura`.
         """
         ret = self.tlwh.copy()
         ret[:2] += ret[2:] / 2

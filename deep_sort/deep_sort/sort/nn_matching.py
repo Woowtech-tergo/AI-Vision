@@ -3,27 +3,26 @@ import numpy as np
 
 
 def _pdist(a, b):
-    """Compute pair-wise squared distance between points in `a` and `b`.
+    """Calcula a distância quadrada entre pares de pontos em `a` e `b`.
 
-    Parameters
+    Parâmetros
     ----------
     a : array_like
-        An NxM matrix of N samples of dimensionality M.
+        Uma matriz NxM de N amostras com dimensionalidade M.
     b : array_like
-        An LxM matrix of L samples of dimensionality M.
+        Uma matriz LxM de L amostras com dimensionalidade M.
 
-    Returns
+    Retorna
     -------
     ndarray
-        Returns a matrix of size len(a), len(b) such that element (i, j)
-        contains the squared distance between `a[i]` and `b[j]`.
+        Retorna uma matriz de tamanho len(a), len(b), onde o elemento (i, j)
+        contém a distância quadrada entre `a[i]` e `b[j]`.
 
-    
-    用于计算成对点之间的平方距离
-    a ：NxM 矩阵，代表 N 个样本，每个样本 M 个数值 
-    b ：LxM 矩阵，代表 L 个样本，每个样本有 M 个数值 
-    返回的是 NxL 的矩阵，比如 dist[i][j] 代表 a[i] 和 b[j] 之间的平方和距离
-    参考：https://blog.csdn.net/frankzd/article/details/80251042
+    Usado para calcular a distância quadrada entre pares de pontos.
+    `a` é uma matriz NxM, representando N amostras, cada uma com M valores.
+    `b` é uma matriz LxM, representando L amostras, cada uma com M valores.
+    Retorna uma matriz NxL, onde dist[i][j] representa a distância quadrada entre `a[i]` e `b[j]`.
+    Referência: https://blog.csdn.net/frankzd/article/details/80251042
 
     """
     a, b = np.asarray(a), np.asarray(b)
@@ -36,55 +35,51 @@ def _pdist(a, b):
 
 
 def _cosine_distance(a, b, data_is_normalized=False):
-    """Compute pair-wise cosine distance between points in `a` and `b`.
+    """Calcula a distância de cosseno entre pares de pontos em `a` e `b`.
 
-    Parameters
+    Parâmetros
     ----------
     a : array_like
-        An NxM matrix of N samples of dimensionality M.
+        Uma matriz NxM de N amostras com dimensionalidade M.
     b : array_like
-        An LxM matrix of L samples of dimensionality M.
+        Uma matriz LxM de L amostras com dimensionalidade M.
     data_is_normalized : Optional[bool]
-        If True, assumes rows in a and b are unit length vectors.
-        Otherwise, a and b are explicitly normalized to lenght 1.
+        Se True, assume que as linhas em `a` e `b` são vetores normalizados.
+        Caso contrário, `a` e `b` são explicitamente normalizados para comprimento 1.
 
-    Returns
+    Retorna
     -------
     ndarray
-        Returns a matrix of size len(a), len(b) such that eleement (i, j)
-        contains the squared distance between `a[i]` and `b[j]`.
+        Retorna uma matriz de tamanho len(a), len(b), onde o elemento (i, j)
+        contém a distância de cosseno entre `a[i]` e `b[j]`.
 
-    用于计算成对点之间的余弦距离
-    a ：NxM 矩阵，代表 N 个样本，每个样本 M 个数值 
-    b ：LxM 矩阵，代表 L 个样本，每个样本有 M 个数值 
-    返回的是 NxL 的矩阵，比如 c[i][j] 代表 a[i] 和 b[j] 之间的余弦距离
-    参考：
-    https://blog.csdn.net/u013749540/article/details/51813922
+    Usado para calcular a distância de cosseno entre pares de pontos.
+    Referência: https://blog.csdn.net/u013749540/article/details/51813922
     
 
     """
     if not data_is_normalized:
-        # np.linalg.norm 求向量的范式，默认是 L2 范式 
+        # np.linalg.norm calcula a norma de um vetor, por padrão a norma L2
         a = np.asarray(a) / np.linalg.norm(a, axis=1, keepdims=True)
         b = np.asarray(b) / np.linalg.norm(b, axis=1, keepdims=True)
-    return 1. - np.dot(a, b.T) # 余弦距离 = 1 - 余弦相似度
+    return 1. - np.dot(a, b.T) # Distância de cosseno = 1 - similaridade de cosseno
 
 
 def _nn_euclidean_distance(x, y):
-    """ Helper function for nearest neighbor distance metric (Euclidean).
+    """ Função auxiliar para a métrica de distância do vizinho mais próximo (Euclidiana).
 
-    Parameters
+    Parâmetros
     ----------
     x : ndarray
-        A matrix of N row-vectors (sample points).
+        Uma matriz de N vetores linha (pontos de amostra).
     y : ndarray
-        A matrix of M row-vectors (query points).
+        Uma matriz de M vetores linha (pontos de consulta).
 
-    Returns
+    Retorna
     -------
     ndarray
-        A vector of length M that contains for each entry in `y` the
-        smallest Euclidean distance to a sample in `x`.
+        Um vetor de comprimento M que contém, para cada entrada em `y`,
+        a menor distância Euclidiana para uma amostra em `x`.
 
     """
     distances = _pdist(x, y)
@@ -92,21 +87,20 @@ def _nn_euclidean_distance(x, y):
 
 
 def _nn_cosine_distance(x, y):
-    """ Helper function for nearest neighbor distance metric (cosine).
+    """ Função auxiliar para a métrica de distância do vizinho mais próximo (Cosseno).
 
-    Parameters
+    Parâmetros
     ----------
     x : ndarray
-        A matrix of N row-vectors (sample points).
+        Uma matriz de N vetores linha (pontos de amostra).
     y : ndarray
-        A matrix of M row-vectors (query points).
+        Uma matriz de M vetores linha (pontos de consulta).
 
-    Returns
+    Retorna
     -------
     ndarray
-        A vector of length M that contains for each entry in `y` the
-        smallest cosine distance to a sample in `x`.
-
+        Um vetor de comprimento M que contém, para cada entrada em `y`,
+        a menor distância de cosseno para uma amostra em `x`.
     """
     distances = _cosine_distance(x, y)
     return distances.min(axis=0)
@@ -114,31 +108,25 @@ def _nn_cosine_distance(x, y):
 
 class NearestNeighborDistanceMetric(object):
     """
-    A nearest neighbor distance metric that, for each target, returns
-    the closest distance to any sample that has been observed so far.
+    Uma métrica de distância do vizinho mais próximo que, para cada alvo, retorna
+    a menor distância para qualquer amostra observada até o momento.
 
-    对于每个目标，返回最近邻居的距离度量, 即与到目前为止已观察到的任何样本的最接近距离。
-
-    Parameters
+    Parâmetros
     ----------
     metric : str
-        Either "euclidean" or "cosine".
+        Pode ser "euclidean" ou "cosine".
     matching_threshold: float
-        The matching threshold. Samples with larger distance are considered an
-        invalid match.
-        匹配阈值。 距离较大的样本对被认为是无效的匹配。
+        O limite de correspondência. Amostras com distância maior são consideradas
+        uma correspondência inválida.
     budget : Optional[int]
-        If not None, fix samples per class to at most this number. Removes
-        the oldest samples when the budget is reached.
-        如果不是None，则将每个类别的样本最多固定为该数字。 
-        删除达到budget时最古老的样本。
+        Se não for None, fixa o número máximo de amostras por classe.
+        Remove as amostras mais antigas quando o limite (`budget`) é atingido.
 
-    Attributes
+    Atributos
     ----------
     samples : Dict[int -> List[ndarray]]
-        A dictionary that maps from target identities to the list of samples
-        that have been observed so far.
-        一个从目标ID映射到到目前为止已经观察到的样本列表的字典
+        Um dicionário que mapeia identidades de alvos para a lista de amostras
+        observadas até o momento.
 
     """
 
@@ -146,60 +134,61 @@ class NearestNeighborDistanceMetric(object):
 
 
         if metric == "euclidean":
-            self._metric = _nn_euclidean_distance # 欧式距离
+            self._metric = _nn_euclidean_distance  # Distância Euclidiana
         elif metric == "cosine":
-            self._metric = _nn_cosine_distance # 余弦距离
+            self._metric = _nn_cosine_distance # Distância de Cosseno
         else:
             raise ValueError(
                 "Invalid metric; must be either 'euclidean' or 'cosine'")
         self.matching_threshold = matching_threshold
-        self.budget = budget # budge用于控制 feature 的数目
+        self.budget = budget # Limita o número de características armazenadas
         self.samples = {}
 
     def partial_fit(self, features, targets, active_targets):
-        """Update the distance metric with new data.
-        用新的数据更新测量距离
+        """Atualiza a métrica de distância com novos dados.
 
-        Parameters
+        Parâmetros
         ----------
         features : ndarray
-            An NxM matrix of N features of dimensionality M.
+            Uma matriz NxM de N características com dimensionalidade M.
         targets : ndarray
-            An integer array of associated target identities.
+            Um array inteiro com as identidades dos alvos associados.
         active_targets : List[int]
-            A list of targets that are currently present in the scene.
-        传入特征列表及其对应id，partial_fit构造一个活跃目标的特征字典。
+            Uma lista de alvos atualmente presentes na cena.
+
+        Adiciona novos recursos ao dicionário `samples` e remove os mais antigos
+        se o `budget` for atingido.
 
         """
         for feature, target in zip(features, targets):
-            # 对应目标下添加新的feature，更新feature集合
-            # samples字典    d: feature list}
+
+
             self.samples.setdefault(target, []).append(feature)
             if self.budget is not None:
-                # 只考虑budget个目标，超过直接忽略
+                # Limita o número de características por alvo ao `budget`
                 self.samples[target] = self.samples[target][-self.budget:]
         
-        # 筛选激活的目标；samples是一个字典{id->feature list}
+        # Filtra os alvos ativos no dicionário de amostras
         self.samples = {k: self.samples[k] for k in active_targets}
 
     def distance(self, features, targets):
-        """Compute distance between features and targets.
+        """Calcula a distância entre características e alvos.
 
-        Parameters
+        Parâmetros
         ----------
         features : ndarray
-            An NxM matrix of N features of dimensionality M.
+            Uma matriz NxM de N características com dimensionalidade M.
         targets : List[int]
-            A list of targets to match the given `features` against.
+            Uma lista de alvos para comparar com as características fornecidas.
 
-        Returns
+        Retorna
         -------
         ndarray
-            Returns a cost matrix of shape len(targets), len(features), where
-            element (i, j) contains the closest squared distance between
-            `targets[i]` and `features[j]`.
-        
-        计算features和targets之间的距离，返回一个成本矩阵（代价矩阵）
+            Retorna uma matriz de custo de tamanho len(targets), len(features),
+            onde o elemento (i, j) contém a menor distância quadrada entre
+            `targets[i]` e `features[j]`.
+
+        Calcula a distância entre `features` e `targets`, retornando uma matriz de custos.
         """
         cost_matrix = np.zeros((len(targets), len(features)))
         for i, target in enumerate(targets):

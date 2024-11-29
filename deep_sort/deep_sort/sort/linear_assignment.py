@@ -1,49 +1,49 @@
 # vim: expandtab:ts=4:sw=4
 from __future__ import absolute_import
 import numpy as np
-# The linear sum assignment problem is also known as minimum weight matching in bipartite graphs.
+# O problema de atribuição linear também é conhecido como emparelhamento de peso mínimo em gráficos bipartidos.
 from scipy.optimize import linear_sum_assignment as linear_assignment
 from . import kalman_filter
 
 
 INFTY_COST = 1e+5
 
-# min_cost_matching 使用匈牙利算法解决线性分配问题。
-# 传入 门控余弦距离成本 或 iou cost
+# min_cost_matching usa o algoritmo húngaro para resolver o problema de atribuição linear.
+# Recebe como entrada o custo de distância de gate ou o custo IOU.
 def min_cost_matching(
         distance_metric, max_distance, tracks, detections, track_indices=None,
         detection_indices=None):
-    """Solve linear assignment problem.
+    """Resolve o problema de atribuição linear.
 
-    Parameters
+    Parâmetros
     ----------
     distance_metric : Callable[List[Track], List[Detection], List[int], List[int]) -> ndarray
-        The distance metric is given a list of tracks and detections as well as
-        a list of N track indices and M detection indices. The metric should
-        return the NxM dimensional cost matrix, where element (i, j) is the
-        association cost between the i-th track in the given track indices and
-        the j-th detection in the given detection_indices.
+        A métrica de distância recebe uma lista de tracks e detecções, bem como
+        uma lista de N índices de tracks e M índices de detecções. A métrica deve
+        retornar a matriz de custo NxM, onde o elemento (i, j) é o custo de associação
+        entre o i-ésimo track nos índices de tracks fornecidos e a j-ésima detecção
+        nos índices de detecções fornecidos.
     max_distance : float
-        Gating threshold. Associations with cost larger than this value are
-        disregarded.
+        Limite de gate. Associações com custo maior que este valor são
+        desconsideradas.
     tracks : List[track.Track]
-        A list of predicted tracks at the current time step.
+        Uma lista de tracks previstos no momento atual.
     detections : List[detection.Detection]
-        A list of detections at the current time step.
+        Uma lista de detecções no momento atual.
     track_indices : List[int]
-        List of track indices that maps rows in `cost_matrix` to tracks in
-        `tracks` (see description above).
+        Lista de índices de tracks que mapeia as linhas em `cost_matrix` para os
+        tracks em `tracks` (veja a descrição acima).
     detection_indices : List[int]
-        List of detection indices that maps columns in `cost_matrix` to
-        detections in `detections` (see description above).
+        Lista de índices de detecções que mapeia as colunas em `cost_matrix` para
+        as detecções em `detections` (veja a descrição acima).
 
-    Returns
+    Retorna
     -------
     (List[(int, int)], List[int], List[int])
-        Returns a tuple with the following three entries:
-        * A list of matched track and detection indices.
-        * A list of unmatched track indices.
-        * A list of unmatched detection indices.
+        Retorna uma tupla com as seguintes três entradas:
+        * Uma lista de índices de tracks e detecções correspondentes.
+        * Uma lista de índices de tracks não correspondentes.
+        * Uma lista de índices de detecções não correspondentes.
 
     """
     if track_indices is None:
@@ -52,30 +52,32 @@ def min_cost_matching(
         detection_indices = np.arange(len(detections))
 
     if len(detection_indices) == 0 or len(track_indices) == 0:
-        return [], track_indices, detection_indices  # Nothing to match.
+        return [], track_indices, detection_indices  # Nada para corresponder.
 
-    # 计算成本矩阵
+    # Calcula a matriz de custo.
     cost_matrix = distance_metric(
         tracks, detections, track_indices, detection_indices)
     cost_matrix[cost_matrix > max_distance] = max_distance + 1e-5
 
-    # 执行匈牙利算法，得到指派成功的索引对，行索引为tracks的索引，列索引为detections的索引
+    # Executa o algoritmo húngaro, obtendo pares de índices atribuídos com sucesso.
+    # Os índices das linhas correspondem aos tracks e os índices das colunas às detecções.
     row_indices, col_indices = linear_assignment(cost_matrix)
 
     matches, unmatched_tracks, unmatched_detections = [], [], []
-    # 找出未匹配的detections
+    # Identifica as detecções não correspondentes.
     for col, detection_idx in enumerate(detection_indices):
         if col not in col_indices:
             unmatched_detections.append(detection_idx)
-    # 找出未匹配的tracks
+    # Identifica os tracks não correspondentes.
     for row, track_idx in enumerate(track_indices):
         if row not in row_indices:
             unmatched_tracks.append(track_idx)
-    # 遍历匹配的(track, detection)索引对
+    # Percorre os pares de índices (track, detection) correspondentes.
     for row, col in zip(row_indices, col_indices):
         track_idx = track_indices[row]
         detection_idx = detection_indices[col]
-        # 如果相应的cost大于阈值max_distance，也视为未匹配成功
+        # Se o custo correspondente for maior que o limite max_distance,
+        # considera-se como não correspondido.
         if cost_matrix[row, col] > max_distance:
             unmatched_tracks.append(track_idx)
             unmatched_detections.append(detection_idx)
@@ -87,84 +89,62 @@ def min_cost_matching(
 def matching_cascade(
         distance_metric, max_distance, cascade_depth, tracks, detections,
         track_indices=None, detection_indices=None):
-    """Run matching cascade.
+    """Executa o algoritmo de correspondência em cascata.
 
-    Parameters
+    Parâmetros
     ----------
     distance_metric : Callable[List[Track], List[Detection], List[int], List[int]) -> ndarray
-        The distance metric is given a list of tracks and detections as well as
-        a list of N track indices and M detection indices. The metric should
-        return the NxM dimensional cost matrix, where element (i, j) is the
-        association cost between the i-th track in the given track indices and
-        the j-th detection in the given detection indices.
-        距离度量：
-        输入：一个轨迹和检测列表，以及一个N个轨迹索引和M个检测索引的列表。 
-        返回：NxM维的代价矩阵，其中元素(i，j)是给定轨迹索引中第i个轨迹与
-        给定检测索引中第j个检测之间的关联成本。
+        A métrica de distância recebe uma lista de tracks e detecções, bem como
+        uma lista de N índices de tracks e M índices de detecções. A métrica deve
+        retornar a matriz de custo NxM, onde o elemento (i, j) é o custo de associação
+        entre o i-ésimo track nos índices fornecidos e a j-ésima detecção nos índices fornecidos.
     max_distance : float
-        Gating threshold. Associations with cost larger than this value are
-        disregarded.
-        门控阈值。成本大于此值的关联将被忽略。
+        Limite de gate. Associações com custo maior que este valor são
+        desconsideradas.
     cascade_depth: int
-        The cascade depth, should be se to the maximum track age.
-        级联深度应设置为最大轨迹寿命。
+        A profundidade da cascata, deve ser definida como a idade máxima do track.
     tracks : List[track.Track]
-        A list of predicted tracks at the current time step.
-        当前时间步的预测轨迹列表。
+        Uma lista de tracks previstos no momento atual.
     detections : List[detection.Detection]
-        A list of detections at the current time step.
-        当前时间步的检测列表。
+        Uma lista de detecções no momento atual.
     track_indices : Optional[List[int]]
-        List of track indices that maps rows in `cost_matrix` to tracks in
-        `tracks` (see description above). Defaults to all tracks.
-        轨迹索引列表，用于将 cost_matrix中的行映射到tracks的
-         轨迹（请参见上面的说明）。 默认为所有轨迹。
+        Lista de índices de tracks que mapeia as linhas em `cost_matrix` para os
+        tracks em `tracks` (veja a descrição acima). Padrão: todos os tracks.
     detection_indices : Optional[List[int]]
-        List of detection indices that maps columns in `cost_matrix` to
-        detections in `detections` (see description above). Defaults to all
-        detections.
-        将 cost_matrix中的列映射到的检测索引列表
-         detections中的检测（请参见上面的说明）。 默认为全部检测。
+        Lista de índices de detecções que mapeia as colunas em `cost_matrix` para
+        as detecções em `detections` (veja a descrição acima). Padrão: todas as detecções.
 
-    Returns
+    Retorna
     -------
     (List[(int, int)], List[int], List[int])
-        Returns a tuple with the following three entries:
-        * A list of matched track and detection indices.
-        * A list of unmatched track indices.
-        * A list of unmatched detection indices.
-
-    返回包含以下三个条目的元组：
-    
-    匹配的跟踪和检测的索引列表，
-    不匹配的轨迹索引的列表，
-    未匹配的检测索引的列表。
+        Retorna uma tupla com as seguintes três entradas:
+        * Uma lista de índices de tracks e detecções correspondentes.
+        * Uma lista de índices de tracks não correspondentes.
+        * Uma lista de índices de detecções não correspondentes.
 
     """
-    
-    # 分配track_indices和detection_indices两个列表
+
+    # Atribui os índices de tracks e detecções, se não fornecidos.
     if track_indices is None:
         track_indices = list(range(len(tracks)))
     if detection_indices is None:
         detection_indices = list(range(len(detections)))
 
-    # 初始化匹配集matches M ← ∅ 
-    # 未匹配检测集unmatched_detections U ← D 
+    # Inicializa as listas de correspondência e detecções não correspondentes.
     unmatched_detections = detection_indices
     matches = []
-    # 由小到大依次对每个level的tracks做匹配
+    # Itera por nível de profundidade na cascata.
     for level in range(cascade_depth):
-        # 如果没有detections，退出循环
+        # Sai do loop se não houver detecções restantes.
         if len(unmatched_detections) == 0:  # No detections left
             break
 
-        # 当前level的所有tracks索引
-        # 步骤6：Select tracks by age
+        # Seleciona os índices de tracks no nível atual.
         track_indices_l = [
             k for k in track_indices
             if tracks[k].time_since_update == 1 + level
         ]
-        # 如果当前level没有track，继续
+        # Realiza a correspondência no nível atual usando min_cost_matching.
         if len(track_indices_l) == 0:  # Nothing to match at this level
             continue
             
@@ -178,62 +158,70 @@ def matching_cascade(
     return matches, unmatched_tracks, unmatched_detections
 
 '''
-门控成本矩阵：通过计算卡尔曼滤波的状态分布和测量值之间的距离对成本矩阵进行限制，
-成本矩阵中的距离是track和detection之间的外观相似度。
-如果一个轨迹要去匹配两个外观特征非常相似的 detection，很容易出错；
-分别让两个detection计算与这个轨迹的马氏距离，并使用一个阈值gating_threshold进行限制，
-就可以将马氏距离较远的那个detection区分开，从而减少错误的匹配。
+Matriz de custo com gate: restringe a matriz de custo ao calcular a distância
+entre a distribuição de estado do filtro de Kalman e os valores medidos.
+As distâncias na matriz de custo refletem a similaridade de aparência entre
+tracks e detecções. 
+
+Se um track tenta corresponder a duas detecções com características de aparência
+muito semelhantes, erros podem ocorrer. Ao calcular a distância de Mahalanobis
+entre cada detecção e o track, e aplicar um limite (`gating_threshold`), é possível
+distinguir a detecção mais distante em termos de Mahalanobis, reduzindo erros
+de correspondência.
 '''
 def gate_cost_matrix(
         kf, cost_matrix, tracks, detections, track_indices, detection_indices,
         gated_cost=INFTY_COST, only_position=False):
-    """Invalidate infeasible entries in cost matrix based on the state
-    distributions obtained by Kalman filtering.
+    """Invalida entradas inviáveis na matriz de custo com base nas distribuições
+    de estado obtidas pelo filtro de Kalman.
 
-    Parameters
+    Parâmetros
     ----------
-    kf : The Kalman filter.
+    kf : O filtro de Kalman.
     cost_matrix : ndarray
-        The NxM dimensional cost matrix, where N is the number of track indices
-        and M is the number of detection indices, such that entry (i, j) is the
-        association cost between `tracks[track_indices[i]]` and
+        A matriz de custo NxM, onde N é o número de índices de tracks
+        e M é o número de índices de detecções, de forma que o elemento (i, j)
+        é o custo de associação entre `tracks[track_indices[i]]` e
         `detections[detection_indices[j]]`.
     tracks : List[track.Track]
-        A list of predicted tracks at the current time step.
+        Uma lista de tracks previstos no momento atual.
     detections : List[detection.Detection]
-        A list of detections at the current time step.
+        Uma lista de detecções no momento atual.
     track_indices : List[int]
-        List of track indices that maps rows in `cost_matrix` to tracks in
-        `tracks` (see description above).
+        Lista de índices de tracks que mapeia as linhas em `cost_matrix` para os
+        tracks em `tracks`.
     detection_indices : List[int]
-        List of detection indices that maps columns in `cost_matrix` to
-        detections in `detections` (see description above).
+        Lista de índices de detecções que mapeia as colunas em `cost_matrix` para
+        as detecções em `detections`.
     gated_cost : Optional[float]
-        Entries in the cost matrix corresponding to infeasible associations are
-        set this value. Defaults to a very large value.
-        代价矩阵中与不可行关联相对应的条目设置此值。 默认为一个很大的值。
+        Entradas na matriz de custo que correspondem a associações inviáveis são
+        definidas como este valor. O padrão é um valor muito alto.
     only_position : Optional[bool]
-        If True, only the x, y position of the state distribution is considered
-        during gating. Defaults to False.
-        如果为True，则在门控期间仅考虑状态分布的x，y位置。默认为False。
+        Se True, apenas as posições x e y da distribuição de estado são
+        consideradas durante o gate. O padrão é False.
 
-    Returns
+    Retorna
     -------
     ndarray
-        Returns the modified cost matrix.
+        Retorna a matriz de custo modificada.
 
     """
-    # 根据通过卡尔曼滤波获得的状态分布，使成本矩阵中的不可行条目无效。
-    gating_dim = 2 if only_position else 4 # 测量空间维度 
-    # 马氏距离通过测算检测与平均轨迹位置的距离超过多少标准差来考虑状态估计的不确定性。
-    # 通过从逆chi^2分布计算95%置信区间的阈值，排除可能性小的关联。
-    # 四维测量空间对应的马氏阈值为9.4877
+    # Invalida entradas inviáveis na matriz de custo com base nas distribuições
+    # de estado obtidas pelo filtro de Kalman.
+    gating_dim = 2 if only_position else 4 # Invalida entradas inviáveis na matriz de custo com base nas distribuições
+    # de estado obtidas pelo filtro de Kalman.
+    # A distância de Mahalanobis avalia quão longe a medição está da posição média
+    # do track em termos de desvios padrão, considerando a incerteza na estimativa
+    # do estado. O limite é calculado a partir da distribuição inversa qui-quadrado
+    # para um intervalo de confiança de 95%.
+    # Para um espaço de medição de 4 dimensões, o limite de Mahalanobis é 9.4877.
     gating_threshold = kalman_filter.chi2inv95[gating_dim]
     measurements = np.asarray(
         [detections[i].to_xyah() for i in detection_indices])
     for row, track_idx in enumerate(track_indices):
         track = tracks[track_idx]
-        #KalmanFilter.gating_distance 计算状态分布和测量之间的选通距离
+        # Calcula a distância de gate entre a distribuição de estado do filtro
+        # de Kalman e as medições
         gating_distance = kf.gating_distance(
             track.mean, track.covariance, measurements, only_position)
         cost_matrix[row, gating_distance > gating_threshold] = gated_cost

@@ -3,16 +3,11 @@
 
 class TrackState:
     """
-    Enumeration type for the single target track state. Newly created tracks are
-    classified as `tentative` until enough evidence has been collected. Then,
-    the track state is changed to `confirmed`. Tracks that are no longer alive
-    are classified as `deleted` to mark them for removal from the set of active
-    tracks.
+     Tipo de enumeração para o estado de uma única trilha (track) de alvo. Tracks recém-criados são
+    classificados como `Tentative` até que evidências suficientes sejam coletadas.
+    Em seguida, o estado do track é alterado para `Confirmed`. Tracks que não estão mais ativos
+    são classificados como `Deleted` para marcá-los para remoção do conjunto de tracks ativos.
 
-    单个目标track状态的枚举类型。 
-    新创建的track分类为“Tentative”，直到收集到足够的证据为止。 
-    然后，跟踪状态更改为“Confirmed”。 
-    不再活跃的tracks被归类为“Deleted”，以将其标记为从有效集中删除。
 
     """
 
@@ -23,65 +18,48 @@ class TrackState:
 
 class Track:
     """
-    A single target track with state space `(x, y, a, h)` and associated
-    velocities, where `(x, y)` is the center of the bounding box, `a` is the
-    aspect ratio and `h` is the height.
+    Um único track de alvo com espaço de estado `(x, y, a, h)` e velocidades associadas,
+    onde `(x, y)` é o centro da caixa delimitadora, `a` é a proporção largura/altura
+    e `h` é a altura.
 
-    具有状态空间（x，y，a，h）并关联速度的单个目标轨迹（track），
-    其中（x，y）是边界框的中心，a是宽高比，h是高度。
-
-    Parameters
+    Parâmetros
     ----------
     mean : ndarray
-        Mean vector of the initial state distribution.
-        初始状态分布的均值向量
+        Vetor médio da distribuição inicial do estado.
     covariance : ndarray
-        Covariance matrix of the initial state distribution.
-        初始状态分布的协方差矩阵
+        Matriz de covariância da distribuição inicial do estado.
     track_id : int
-        A unique track identifier.
-        唯一的track标识符
+        Um identificador exclusivo para o track.
     n_init : int
-        Number of consecutive detections before the track is confirmed. The
-        track state is set to `Deleted` if a miss occurs within the first
+        Número de detecções consecutivas antes que o track seja confirmado. O estado
+        do track é definido como `Deleted` se ocorrer uma falha dentro dos primeiros
         `n_init` frames.
-        确认track之前的连续检测次数。 在第一个n_init帧中
-        第一个未命中的情况下将跟踪状态设置为“Deleted” 
     max_age : int
-        The maximum number of consecutive misses before the track state is
-        set to `Deleted`.
-        跟踪状态设置为Deleted之前的最大连续未命中数；代表一个track的存活期限
-         
+        Número máximo de falhas consecutivas antes que o estado do track seja definido
+        como `Deleted`.
     feature : Optional[ndarray]
-        Feature vector of the detection this track originates from. If not None,
-        this feature is added to the `features` cache.
-        此track所源自的检测的特征向量。 如果不是None，此feature已添加到feature缓存中。
+        Vetor de características da detecção de origem deste track. Se não for `None`,
+        esta característica é adicionada ao cache `features`.
 
-    Attributes
+    Atributos
     ----------
     mean : ndarray
-        Mean vector of the initial state distribution.
-        初始状态分布的均值向量
+        Vetor médio da distribuição inicial do estado.
     covariance : ndarray
-        Covariance matrix of the initial state distribution.
-        初始状态分布的协方差矩阵
+        Matriz de covariância da distribuição inicial do estado.
     track_id : int
-        A unique track identifier.
+        Um identificador exclusivo para o track.
     hits : int
-        Total number of measurement updates.
-        测量更新总数
+        Número total de atualizações de medição.
     age : int
-        Total number of frames since first occurence.
-        自第一次出现以来的总帧数
+        Número total de frames desde a primeira ocorrência.
     time_since_update : int
-        Total number of frames since last measurement update.
-        自上次测量更新以来的总帧数
+        Número total de frames desde a última atualização de medição.
     state : TrackState
-        The current track state.
+        O estado atual do track.
     features : List[ndarray]
-        A cache of features. On each measurement update, the associated feature
-        vector is added to this list.
-        feature缓存。每次测量更新时，相关feature向量添加到此列表中
+        Cache de características. A cada atualização de medição, o vetor de características associado
+        é adicionado a esta lista.
 
     """
 
@@ -90,15 +68,15 @@ class Track:
         self.mean = mean
         self.covariance = covariance
         self.track_id = track_id
-        # hits代表匹配上了多少次，匹配次数超过n_init，设置Confirmed状态
-        # hits每次调用update函数的时候+1 
+        # hits representa o número de vezes que o track foi associado.
+        # Se o número de associações exceder n_init, o estado é alterado para Confirmed.
         self.hits = 1
-        self.age = 1 # 和time_since_update功能重复
-        # 每次调用predict函数的时候就会+1；   每次调用update函数的时候就会设置为0
+        self.age = 1 # Redundante com time_since_update.
+        # Incrementado a cada chamada de predict(); redefinido para 0 na chamada de update().
         self.time_since_update = 0
 
-        self.state = TrackState.Tentative # 初始化一个Track的时设置Tentative状态
-        # 每个track对应多个features, 每次更新都会将最新的feature添加到列表中
+        self.state = TrackState.Tentative # Estado inicial é Tentative.
+        # Cada track tem várias características; a lista é atualizada com cada nova associação.
         self.features = []
         if feature is not None:
             self.features.append(feature)
@@ -107,13 +85,13 @@ class Track:
         self._max_age = max_age
 
     def to_tlwh(self):
-        """Get current position in bounding box format `(top left x, top left y,
+        """Obtém a posição atual no formato de caixa delimitadora `(top left x, top left y,
         width, height)`.
 
-        Returns
+        Retorna
         -------
         ndarray
-            The bounding box.
+            A caixa delimitadora.
 
         """
         ret = self.mean[:4].copy()
@@ -122,13 +100,13 @@ class Track:
         return ret
 
     def to_tlbr(self):
-        """Get current position in bounding box format `(min x, miny, max x,
+        """Obtém a posição atual no formato de caixa delimitadora `(min x, min y, max x,
         max y)`.
 
-        Returns
+        Retorna
         -------
         ndarray
-            The bounding box.
+            A caixa delimitadora.
 
         """
         ret = self.to_tlwh()
@@ -136,14 +114,13 @@ class Track:
         return ret
 
     def predict(self, kf):
-        """Propagate the state distribution to the current time step using a
-        Kalman filter prediction step.
-        使用卡尔曼滤波器预测步骤将状态分布传播到当前时间步
+        """Propaga a distribuição do estado para o instante atual usando o
+        passo de predição do filtro de Kalman.
 
-        Parameters
+        Parâmetros
         ----------
         kf : kalman_filter.KalmanFilter
-            The Kalman filter.
+            O filtro de Kalman.
 
         """
         self.mean, self.covariance = kf.predict(self.mean, self.covariance)
@@ -151,16 +128,14 @@ class Track:
         self.time_since_update += 1
 
     def update(self, kf, detection):
-        """Perform Kalman filter measurement update step and update the feature
-        cache.
-        执行卡尔曼滤波器测量更新步骤并更新feature缓存
+        """Executa o passo de atualização de medição do filtro de Kalman e atualiza o cache de características.
 
-        Parameters
+        Parâmetros
         ----------
         kf : kalman_filter.KalmanFilter
-            The Kalman filter.
+            O filtro de Kalman.
         detection : Detection
-            The associated detection.
+            A detecção associada.
 
         """
         self.mean, self.covariance = kf.update(
@@ -169,31 +144,31 @@ class Track:
 
         self.hits += 1
         self.time_since_update = 0
-        # hits代表匹配上了多少次，匹配次数超过n_init，设置Confirmed状态
-        # 连续匹配上n_init帧的时候，转变为确定态
+        # Se o track foi associado em n_init frames consecutivos, altera para Confirmed.
+
         if self.state == TrackState.Tentative and self.hits >= self._n_init:
             self.state = TrackState.Confirmed
 
     def mark_missed(self):
-        """Mark this track as missed (no association at the current time step).
+        """Marca este track como perdido (sem associação no instante atual).
         """
-        # 如果在处于Tentative态的情况下没有匹配上任何detection，转变为删除态。
+        # Se o track estiver no estado Tentative e não for associado, muda para Deleted.
         if self.state == TrackState.Tentative:
             self.state = TrackState.Deleted
         elif self.time_since_update > self._max_age:
-            # 如果time_since_update超过max_age，设置Deleted状态
-            # 即失配连续达到max_age次数的时候，转变为删除态
+            # Se o time_since_update exceder max_age, muda para Deleted.
+
             self.state = TrackState.Deleted 
 
     def is_tentative(self):
-        """Returns True if this track is tentative (unconfirmed).
+        """Retorna True se este track estiver no estado Tentative (não confirmado).
         """
         return self.state == TrackState.Tentative
 
     def is_confirmed(self):
-        """Returns True if this track is confirmed."""
+        """Retorna True se este track estiver no estado Confirmed."""
         return self.state == TrackState.Confirmed
 
     def is_deleted(self):
-        """Returns True if this track is dead and should be deleted."""
+        """Retorna True se este track estiver no estado Deleted e deve ser removido."""
         return self.state == TrackState.Deleted

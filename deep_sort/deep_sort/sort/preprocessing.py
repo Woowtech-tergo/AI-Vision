@@ -4,34 +4,35 @@ import cv2
 
 
 def non_max_suppression(boxes, max_bbox_overlap, scores=None):
-    """Suppress overlapping detections.
+    """Suprime detecções sobrepostas.
 
-    Original code from [1]_ has been adapted to include confidence score.
+    O código original de [1]_ foi adaptado para incluir a pontuação de confiança.
 
     .. [1] http://www.pyimagesearch.com/2015/02/16/
            faster-non-maximum-suppression-python/
 
-    Examples
+    Exemplos
     --------
 
         >>> boxes = [d.roi for d in detections]
         >>> scores = [d.confidence for d in detections]
         >>> indices = non_max_suppression(boxes, max_bbox_overlap, scores)
-        >>> detections = [detections[i] for i in indices]
+        >>> detections = [detections[i] para i em indices]
 
-    Parameters
+    Parâmetros
     ----------
     boxes : ndarray
-        Array of ROIs (x, y, width, height).
+        Array de ROIs (x, y, largura, altura).
     max_bbox_overlap : float
-        ROIs that overlap more than this values are suppressed.
+        ROIs que se sobrepõem mais do que este valor são suprimidas.
     scores : Optional[array_like]
-        Detector confidence score.
+        Pontuação de confiança do detector.
 
-    Returns
+    Retorna
     -------
     List[int]
-        Returns indices of detections that have survived non-maxima suppression.
+        Retorna os índices das detecções que sobreviveram à supressão de máximas não máximas.
+
 
     """
     if len(boxes) == 0:
@@ -63,7 +64,7 @@ def non_max_suppression(boxes, max_bbox_overlap, scores=None):
 
         w = np.maximum(0, xx2 - xx1 + 1)
         h = np.maximum(0, yy2 - yy1 + 1)
-
+        # Cálculo do IOU (Intersection over Union)
         overlap = (w * h) / area[idxs[:last]] # IOU 
 
         idxs = np.delete(
