@@ -13,27 +13,27 @@ __all__ = ['DeepSort'] # __all__ define uma "lista branca" de interfaces exposta
 
 class DeepSort(object):
     def __init__(self, model_path, max_dist=0.2, min_confidence=0.3, nms_max_overlap=1.0, max_iou_distance=0.7, max_age=70, n_init=3, nn_budget=100, use_cuda=True):
-        self.min_confidence = min_confidence # Limite de confiança para os resultados da detecção.
+        self.min_confidence = min_confidence  # Limite de confiança para os resultados da detecção.
         self.nms_max_overlap = nms_max_overlap  # Limite para supressão de não máximos. Um valor de 1 indica que não será aplicada supressão.
 
-        self.extractor = Extractor(model_path, use_cuda=use_cuda) # Extrai as características (features) de um batch de imagens.
+        self.extractor = Extractor(model_path, use_cuda=use_cuda)  # Extrai as características (features) de um batch de imagens.
 
-        max_cosine_distance = max_dist # 最大余弦距离，用于级联匹配，如果大于该阈值，则忽略
-        nn_budget = 100 # 每个类别gallery最多的外观描述子的个数，如果超过，删除旧的
-        # NearestNeighborDistanceMetric 最近邻距离度量
-        # 对于每个目标，返回到目前为止已观察到的任何样本的最近距离（欧式或余弦）。
-        # 由距离度量方法构造一个 Tracker。
-        # 第一个参数可选'cosine' or 'euclidean'
+        max_cosine_distance = max_dist  # Distância cosseno máxima, usada para correspondência em cascata; se for maior que este limiar, é ignorada
+        nn_budget = 100  # Número máximo de descritores de aparência na galeria de cada classe; se exceder, os antigos são excluídos
+        # NearestNeighborDistanceMetric Métrica de distância do vizinho mais próximo
+        # Para cada alvo, retorna a menor distância para quaisquer amostras observadas até agora (euclidiana ou cosseno).
+        # Construir um Tracker usando o método de métrica de distância.
+        # Primeiro parâmetro pode ser 'cosine' ou 'euclidean'
         self.metric = NearestNeighborDistanceMetric("cosine", max_cosine_distance, nn_budget)
         self.tracker = Tracker(self.metric, max_iou_distance=max_iou_distance, max_age=max_age, n_init=n_init)
 
     def update(self, bbox_xywh, confidences, ori_img):
         self.height, self.width = ori_img.shape[:2]
         # generate detections
-        # 从原图中抠取bbox对应图片并计算得到相应的特征
+        # Extrair as imagens correspondentes às bboxes da imagem original e calcular as características correspondentes
         features = self._get_features(bbox_xywh, ori_img)
         bbox_tlwh = self._xywh_to_tlwh(bbox_xywh)        
-        # 筛选掉小于min_confidence的目标，并构造一个Detection对象构成的列表
+        # Filtrar alvos com confiança menor que min_confidence e construir uma lista de objetos Detection
         detections = [Detection(bbox_tlwh[i], conf, features[i]) for i,conf in enumerate(confidences) if conf>self.min_confidence]
 
         # run on non-maximum supression
@@ -43,8 +43,8 @@ class DeepSort(object):
         detections = [detections[i] for i in indices]
 
         # update tracker
-        self.tracker.predict() # 将跟踪状态分布向前传播一步
-        self.tracker.update(detections) # 执行测量更新和跟踪管理
+        self.tracker.predict()  # Propagar o estado de rastreamento uma etapa à frente
+        self.tracker.update(detections)  # Executar a atualização de medição e gerenciamento de rastreamento
 
         # output bbox identities
         outputs = []
@@ -65,7 +65,7 @@ class DeepSort(object):
         Convert bbox from xc_yc_w_h to xtl_ytl_w_h
     Thanks JieChen91@github.com for reporting this bug!
     """
-    #将bbox的[x,y,w,h] 转换成[t,l,w,h]
+    # Converter bbox de [x, y, w, h] para [t, l, w, h]
     @staticmethod
     def _xywh_to_tlwh(bbox_xywh):
         if isinstance(bbox_xywh, np.ndarray):
@@ -76,8 +76,8 @@ class DeepSort(object):
         bbox_tlwh[:,1] = bbox_xywh[:,1] - bbox_xywh[:,3]/2.
         return bbox_tlwh
 
-    #将bbox的[x,y,w,h] 转换成[x1,y1,x2,y2]
-    #某些数据集例如 pascal_voc 的标注方式是采用[x，y，w，h]
+    # Converter bbox de [x, y, w, h] para [x1, y1, x2, y2]
+    # Alguns conjuntos de dados, como pascal_voc, usam a forma [x, y, w, h] para anotações
     """Convert [x y w h] box format to [x1 y1 x2 y2] format."""
     def _xywh_to_xyxy(self, bbox_xywh):
         x,y,w,h = bbox_xywh
@@ -109,7 +109,7 @@ class DeepSort(object):
         h = int(y2-y1)
         return t,l,w,h
     
-    # 获取抠图部分的特征
+    # Obter as características das partes recortadas
     def _get_features(self, bbox_xywh, ori_img):
         im_crops = []
         for box in bbox_xywh:

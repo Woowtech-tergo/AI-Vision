@@ -31,6 +31,9 @@ class App:
                 "model_file": "yolov8n.pt",  # Modelo padrão para YOLOv8DeepSort
             },
             # Adicione outros modelos aqui
+
+
+
         }
 
         # Inicializa a interface Gradio

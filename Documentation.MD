@@ -8,10 +8,6 @@ O **Counter Project** é um projeto voltado para o desenvolvimento de uma interf
 
 Desenvolver uma plataforma modular e escalável que permita a integração de diversos modelos de detecção de objetos e pessoas, aplicando técnicas avançadas de visão computacional para resolver problemas reais em diferentes setores. A interface deve ser intuitiva e acessível, facilitando a interação do usuário com os modelos de inteligência artificial implementados.
 
-## Motivação
-
-A crescente demanda por soluções de visão computacional em diversas indústrias motiva a criação de uma plataforma que não só demonstre nossas capacidades técnicas, mas também sirva como base para o desenvolvimento de aplicações personalizadas para clientes. Ao oferecer uma PoC robusta e flexível, podemos ilustrar o valor agregado que nossas soluções de inteligência artificial podem proporcionar.
-
 ## Tecnologias Utilizadas
 
 ### Gradio
@@ -90,7 +86,7 @@ Atualmente, o desenvolvimento em produção está hospedado no servidor **Railwa
 2. **Clonar o Repositório:**
 
    ```bash
-   git clone https://github.com/seu_usuario/counter-project.git
+   https://github.com/gustavofelicidade/ConuterProject.git
    ```
 
 3. **Instalar Dependências:**
@@ -125,11 +121,10 @@ Atualmente, o desenvolvimento em produção está hospedado no servidor **Railwa
 
 - **Desenvolvimento de APIs:**
   - Facilitar a integração com sistemas externos.
-  - Permitir que desenvolvedores utilizem nossos modelos em suas próprias aplicações.
 
 ## Conclusão
 
-O **Counter Project** representa um passo significativo em nossa jornada para oferecer soluções de visão computacional avançadas e acessíveis. Com uma arquitetura flexível e tecnologias de ponta, estamos bem posicionados para atender às necessidades de clientes em diversos setores. A colaboração contínua e o feedback da equipe serão fundamentais para refinar e expandir este projeto.
+O **Counter Project** representa um passo significativo em nossa jornada para oferecer soluções de visão computacional avançadas e acessíveis. A colaboração contínua e o feedback da equipe serão fundamentais para refinar e expandir este projeto.
 
 ---
 
