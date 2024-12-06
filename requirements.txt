@@ -13,6 +13,7 @@ onnxruntime
 # onnxruntime-gpu
 twilio
 
+mediapipe
 
 # WebUI ---------------------------------------
 tqdm
