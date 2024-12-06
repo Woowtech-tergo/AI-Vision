@@ -7,10 +7,12 @@
                 "install": {
                     "nixPkgs": [
                         "mesa",
-                        "glib"
+                        "glib",
+                        "libglvnd"
                     ],
                     "pythonDependencies": [
                         "mediapipe",
+                        "ultralytics",
                         "opencv-python-headless",
                         "opencv-contrib-python-headless",
                         "gradio==5.7.0",

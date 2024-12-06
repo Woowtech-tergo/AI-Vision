@@ -4,8 +4,8 @@ ultralytics
 torch
 torchvision
 torchaudio
-opencv-python-headless
-opencv-contrib-python-headless
+opencv-python-headless==4.10.0.84
+opencv-contrib-python-headless====4.10.0.84
 matplotlib
 numpy
 python-dotenv
