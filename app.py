@@ -27,6 +27,7 @@ class App:
 
         # Mapeamento de funções por modelo
         self.model_functions = {
+            # Adicione outros modelos aqui
             "YOLOv8DeepSort": {
                 "get_detectable_classes": yolo_deepsort.get_detectable_classes,
                 "start_processing": yolo_deepsort.start_processing,
@@ -34,7 +35,6 @@ class App:
                 "process_webcam_frame": yolo_deepsort.process_webcam_frame,
                 "model_file": "yolov8n.pt",  # Modelo padrão para YOLOv8DeepSort
             },
-            # Adicione outros modelos aqui
 
             "ContadorDePessoasEmVideo": {
                 "get_detectable_classes": lambda model_file: ["person"],  # Pode ser ["person"] ou []
@@ -52,9 +52,6 @@ class App:
                 "model_file": None
             }
 
-
-
-
         }
 
         # Inicializa a interface Gradio
@@ -63,7 +60,13 @@ class App:
             gr.Markdown(
                 """
                 # Detecção e Rastreamento de Objetos
-                Baseado em OpenCV + YOLOv8 + DeepSort
+                Baseado em OpenCV + YOLOv8 + DeepSort \n
+                
+                ContadorDePessoasEmVideo \n
+                
+                FaceMash
+                
+                
                 """
             )
 

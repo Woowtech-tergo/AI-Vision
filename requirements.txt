@@ -1,5 +1,5 @@
 # Base ---------------------------------------
-
+mediapipe
 ultralytics
 torch
 torchvision
@@ -13,7 +13,7 @@ onnxruntime
 # onnxruntime-gpu
 twilio
 
-mediapipe
+
 
 # WebUI ---------------------------------------
 tqdm
