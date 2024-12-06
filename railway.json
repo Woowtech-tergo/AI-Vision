@@ -6,10 +6,12 @@
             "phases": {
                 "install": {
                     "nixPkgs": [
+                        "mesa",
                         "libgl",
                         "libglib"
                     ],
                     "pythonDependencies": [
+                        "mediapipe",
                         "opencv-python-headless",
                         "opencv-contrib-python-headless",
                         "gradio==5.7.0",
