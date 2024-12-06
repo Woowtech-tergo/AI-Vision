@@ -1,5 +1,5 @@
 # Base ---------------------------------------
-mediapipe
+
 ultralytics
 torch
 torchvision
