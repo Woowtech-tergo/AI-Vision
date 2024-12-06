@@ -11,9 +11,10 @@ import deep_sort.deep_sort.deep_sort as ds
 # Controla se o processamento deve ser interrompido
 should_continue = True
 
-# Variáveis globais para modelo e tracker
+# Variáveis globais para modelo, tracker e contador de IDs únicos
 model = None
 tracker = None
+unique_ids = set()
 
 def get_detectable_classes(model_file):
     """Obtém as classes detectáveis de um arquivo de modelo fornecido.
@@ -38,8 +39,11 @@ def stop_processing():
 
 # Função para iniciar o processamento de vídeo
 def start_processing(input_data, output_path, detect_class, model_file, progress=gr.Progress(track_tqdm=True)):
-    global should_continue, model, tracker
+    global should_continue, model, tracker, unique_ids
     should_continue = True
+
+    # Reinicia o conjunto de IDs únicos
+    unique_ids = set()
 
     # Obter a lista de classes detectáveis
     detect_classes = get_detectable_classes(model_file)
@@ -122,7 +126,7 @@ def detect_and_track(input_path: str, output_path: str, detect_class_index: int,
     - model: Modelo utilizado para detecção de objetos.
     - tracker: Modelo utilizado para rastreamento de objetos.
     """
-    global should_continue  # Garante que estamos modificando a variável global
+    global should_continue, unique_ids  # Garante que estamos modificando a variável global
 
     cap = cv2.VideoCapture(input_path)  # Abre o arquivo de vídeo com OpenCV.
     if not cap.isOpened():  # Verifica se o vídeo foi aberto com sucesso.
@@ -169,7 +173,10 @@ def detect_and_track(input_path: str, output_path: str, detect_class_index: int,
         # Realiza o rastreamento dos objetos detectados com o modelo DeepSort.
         resultsTracker = tracker.update(detections, confarray, frame)
 
+        # Atualiza o conjunto de IDs únicos
         for x1, y1, x2, y2, Id in resultsTracker:
+            unique_ids.add(Id)
+
             x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])  # Converte as posições para inteiros.
 
             # Desenha bounding boxes e texto
@@ -183,6 +190,17 @@ def detect_and_track(input_path: str, output_path: str, detect_class_index: int,
                 bg_color=(255, 0, 255),
             )
 
+        # Exibe o contador de objetos únicos no frame
+        total_count = len(unique_ids)
+        putTextWithBackground(
+            frame,
+            f"Total de objetos: {total_count}",
+            (10, 30),
+            font_scale=1.0,
+            text_color=(255, 255, 255),
+            bg_color=(0, 0, 0),
+        )
+
         output_video.write(frame)  # Escreve o quadro processado no arquivo de saída.
 
         frame_count += 1  # Incrementa o contador de frames processados
@@ -192,12 +210,13 @@ def detect_and_track(input_path: str, output_path: str, detect_class_index: int,
 
     print(f"Processamento concluído. Total de frames processados: {frame_count}")
     print(f"O diretório de saída é: {output_video_path}")
+    print(f"Total de objetos únicos detectados: {len(unique_ids)}")
     return output_video_path
 
 # Função para processar frames da webcam
 def process_webcam_frame(image, detect_class, model_file):
     """Processa um frame da webcam."""
-    global model, tracker
+    global model, tracker, unique_ids
 
     # Obter a lista de classes detectáveis
     detect_classes = get_detectable_classes(model_file)
@@ -208,6 +227,8 @@ def process_webcam_frame(image, detect_class, model_file):
         model = YOLO(model_file)
     if tracker is None:
         tracker = ds.DeepSort("deep_sort/deep_sort/deep/checkpoint/ckpt.t7")
+    if 'unique_ids' not in globals():
+        unique_ids = set()
 
     # Converte a imagem para o formato correto
     frame = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
@@ -221,7 +242,10 @@ def process_webcam_frame(image, detect_class, model_file):
     # Realiza o rastreamento dos objetos detectados com o modelo DeepSort.
     resultsTracker = tracker.update(detections, confarray, frame)
 
+    # Atualiza o conjunto de IDs únicos
     for x1, y1, x2, y2, Id in resultsTracker:
+        unique_ids.add(Id)
+
         x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])  # Converte as posições para inteiros.
 
         # Desenha bounding boxes e texto
@@ -234,6 +258,17 @@ def process_webcam_frame(image, detect_class, model_file):
             text_color=(255, 255, 255),
             bg_color=(255, 0, 255),
         )
+
+    # Exibe o contador de objetos únicos no frame
+    total_count = len(unique_ids)
+    putTextWithBackground(
+        frame,
+        f"Total de objetos: {total_count}",
+        (10, 30),
+        font_scale=1.0,
+        text_color=(255, 255, 255),
+        bg_color=(0, 0, 0),
+    )
 
     # Converte a imagem de volta para RGB
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)

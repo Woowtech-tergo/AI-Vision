@@ -1,3 +1,4 @@
+
 # app.py
 
 from ultralytics import YOLO
@@ -19,7 +20,9 @@ from Modelos.YOLOv8DeepSortTracking import yolo_deepsort
 class App:
     def __init__(self):
         # Lista de modelos disponíveis
-        self.model_list = ["YOLOv8DeepSort"]  # Caso adicione outros modelos, inclua-os aqui
+        self.model_list = ["YOLOv8DeepSort",
+                           "ContadorDePessoasEmVideo"]  # Caso adicione outros modelos, inclua-os aqui
+
 
         # Mapeamento de funções por modelo
         self.model_functions = {
@@ -32,6 +35,13 @@ class App:
             },
             # Adicione outros modelos aqui
 
+            "ContadorDePessoasEmVideo": {
+                "get_detectable_classes": lambda model_file: ["person"],  # Pode ser ["person"] ou []
+                "start_processing": self.contador_start_processing,
+                "stop_processing": self.contador_stop_processing,
+                "process_webcam_frame": self.contador_process_webcam_frame,
+                "model_file": None,  # Não há arquivo de modelo específico
+    }
 
 
         }
@@ -289,6 +299,168 @@ class App:
         if model_info:
             stop_processing_func = model_info["stop_processing"]
             stop_processing_func()
+
+    #########################################
+    # Contador de Pessoas
+    #########################################
+
+    def contador_stop_processing(self):
+        # Similar ao YOLOv8DeepSort, apenas ajusta a variável global se existir
+        global should_continue
+        should_continue = False
+        return "Processamento interrompido."
+
+    def contador_start_processing(self, input_data, output_path, detect_class, model_file,
+                                  progress=gr.Progress(track_tqdm=True)):
+        # Adapte o código do countingPeople.py aqui para:
+        # - Ler o vídeo de input_data
+        # - Processar frames e contar as pessoas
+        # - Salvar o vídeo processado em output_path (por exemplo, output.mp4)
+        # - Retornar (output_video_path, output_video_path)
+
+        global should_continue
+        should_continue = True
+
+        # Verifica se input_data é um arquivo de vídeo (string) ou outro tipo
+        if not isinstance(input_data, str) or not os.path.exists(input_data):
+            return None, None
+
+        cap = cv2.VideoCapture(input_data)
+        if not cap.isOpened():
+            print(f"Não foi possível abrir o vídeo: {input_data}")
+            return None, None
+
+        # Ajustar parâmetros e linhas conforme countingPeople.py
+        w = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        h = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        frameArea = h * w
+        areaTH = frameArea * 0.003
+
+        leftmostLine = int(1.0 / 6 * w)
+        rightmostLine = int(5.0 / 6 * w)
+
+        leftmostLimit = int(1.0 / 12 * w)
+        rightmostLimit = int(11.0 / 12 * w)
+
+        leftmostLineColor = (255, 0, 0)
+        rightmostLineColor = (0, 0, 255)
+
+        # Linhas
+        pt1 = [rightmostLine, 0]
+        pt2 = [rightmostLine, h]
+        pts_L1 = np.array([pt1, pt2], np.int32)
+        pt3 = [leftmostLine, 0]
+        pt4 = [leftmostLine, h]
+        pts_L2 = np.array([pt3, pt4], np.int32)
+
+        pt5 = [leftmostLimit, 0]
+        pt6 = [leftmostLimit, h]
+        pts_L3 = np.array([pt5, pt6], np.int32)
+        pt7 = [rightmostLimit, 0]
+        pt8 = [rightmostLimit, h]
+        pts_L4 = np.array([pt7, pt8], np.int32)
+
+        backgroundSubtractor = cv2.createBackgroundSubtractorMOG2()
+        kernelOp = np.ones((3, 3), np.uint8)
+        kernelCl = np.ones((9, 9), np.uint8)
+
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        persons = []
+        max_p_age = 5
+        pid = 1
+
+        leftCounter = 0
+        rightCounter = 0
+
+        # Configura saída de vídeo
+        output_video_path = os.path.join(output_path, "output.mp4")
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        size = (int(w), int(h))
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        out = cv2.VideoWriter(output_video_path, fourcc, fps, size, True)
+
+        while cap.isOpened() and should_continue:
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            for per in persons:
+                per.age_one()
+
+            fgmask = backgroundSubtractor.apply(frame)
+            ret2, imBin = cv2.threshold(fgmask, 127, 255, cv2.THRESH_BINARY)
+            mask = cv2.morphologyEx(imBin, cv2.MORPH_OPEN, kernelOp)
+            mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernelCl)
+
+            contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+            for cnt in contours:
+                area = cv2.contourArea(cnt)
+                if area > areaTH:
+                    M = cv2.moments(cnt)
+                    cx = int(M['m10'] / M['m00'])
+                    cy = int(M['m01'] / M['m00'])
+                    x, y, w_box, h_box = cv2.boundingRect(cnt)
+
+                    newPerson = True
+                    if cy in range(leftmostLimit, rightmostLimit):
+                        for person in persons:
+                            if abs(x - person.getX()) <= w_box and abs(y - person.getY()) <= h_box:
+                                newPerson = False
+                                person.updateCoords(cx, cy)
+
+                                if person.goingLeft(rightmostLine, leftmostLine) == True:
+                                    leftCounter += 1
+                                elif person.goingRight(rightmostLine, leftmostLine) == True:
+                                    rightCounter += 1
+                                break
+
+                            if person.getState() == '1':
+                                if person.getDir() == 'right' and person.getY() > rightmostLimit:
+                                    person.setDone()
+                                elif person.getDir() == 'left' and person.getY() < leftmostLimit:
+                                    person.setDone()
+
+                            if person.timedOut():
+                                index = persons.index(person)
+                                persons.pop(index)
+                                del person
+
+                        if newPerson == True:
+                            from Modelos.ContadorDePessoasEmVideo.Person import Person
+                            person = Person(pid, cx, cy, max_p_age)
+                            persons.append(person)
+                            pid += 1
+
+                        cv2.circle(frame, (cx, cy), 5, (0, 0, 255), -1)
+                        img = cv2.rectangle(frame, (x, y), (x + w_box, y + h_box), (255, 0, 0), 2)
+
+            leftMsg = 'Left: ' + str(leftCounter)
+            rightMsg = 'Right: ' + str(rightCounter)
+            frame = cv2.polylines(frame, [pts_L1], False, rightmostLineColor, thickness=2)
+            frame = cv2.polylines(frame, [pts_L2], False, leftmostLineColor, thickness=2)
+            frame = cv2.polylines(frame, [pts_L3], False, (255, 255, 255), thickness=1)
+            frame = cv2.polylines(frame, [pts_L4], False, (255, 255, 255), thickness=1)
+            cv2.putText(frame, leftMsg, (10, 40), font, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
+            cv2.putText(frame, leftMsg, (10, 40), font, 0.5, leftmostLineColor, 1, cv2.LINE_AA)
+            cv2.putText(frame, rightMsg, (10, 90), font, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
+            cv2.putText(frame, rightMsg, (10, 90), font, 0.5, rightmostLineColor, 1, cv2.LINE_AA)
+
+            out.write(frame)
+
+        cap.release()
+        out.release()
+
+        return output_video_path, output_video_path
+
+    def contador_process_webcam_frame(self, frame, detect_class, model_file):
+        # Caso queira processar frame a frame da webcam com o mesmo contador, é preciso adaptar o código
+        # do countingPeople para trabalhar frame a frame sem limites.
+        # Por simplicidade, retornaremos o frame original ou algum processamento mínimo.
+        return frame
+
+
+
 
 if __name__ == "__main__":
     app = App()
