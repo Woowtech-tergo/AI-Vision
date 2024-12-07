@@ -1,34 +1,35 @@
 {
-    "$schema": "https://railway.app/railway.schema.json",
-    "build": {
-        "builder": "NIXPACKS",
-        "nixpacks": {
-            "phases": {
-                "install": {
-                    "nixPkgs": [
-                        "mesa",
-                        "glib",
-                        "libglvnd"
-                    ],
-                    "pythonDependencies": [
-                        "mediapipe",
-                        "ultralytics",
-                        "opencv-python-headless==4.10.0.84",
-                        "opencv-contrib-python-headless==4.10.0.84",
-                        "gradio==5.7.0",
-                        "ultralytics",
-                        "torch",
-                        "torchvision",
-                        "torchaudio",
-                        "matplotlib",
-                        "numpy",
-                        "scipy"
-                    ]
-                }
-            }
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "nixpacks": {
+      "phases": {
+        "install": {
+          "nixPkgs": [
+            "mesa",
+            "glib",
+                    "gtk3",
+            "libglvnd"
+          ],
+          "pythonDependencies": [
+            "opencv-contrib-python-headless==4.7.0.72",
+            "gradio==5.7.0",
+            "ultralytics",
+            "torch",
+            "torchvision",
+            "torchaudio",
+            "matplotlib",
+            "numpy",
+            "scipy"
+          ],
+          "cmds": [
+            "pip install mediapipe==0.10.18 --no-deps"
+          ]
         }
-    },
-    "deploy": {
-        "startCommand": "python3 app.py"
+      }
     }
+  },
+  "deploy": {
+    "startCommand": "python3 app.py"
+  }
 }
