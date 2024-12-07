@@ -1,4 +1,3 @@
-
 # app.py
 
 from ultralytics import YOLO
@@ -17,15 +16,17 @@ from gradio_webrtc import WebRTC
 # Importar o módulo yolo_deepsort completo
 from Modelos.YOLOv8DeepSortTracking import yolo_deepsort
 
+
 class App:
     def __init__(self):
         # Lista de modelos disponíveis
         self.model_list = ["YOLOv8DeepSort",
-                           "ContadorDePessoasEmVideo"]  # Caso adicione outros modelos, inclua-os aqui
-
+                           "ContadorDePessoasEmVideo",
+                           "FaceMash"]  # Caso adicione outros modelos, inclua-os aqui
 
         # Mapeamento de funções por modelo
         self.model_functions = {
+            # Adicione outros modelos aqui
             "YOLOv8DeepSort": {
                 "get_detectable_classes": yolo_deepsort.get_detectable_classes,
                 "start_processing": yolo_deepsort.start_processing,
@@ -33,7 +34,6 @@ class App:
                 "process_webcam_frame": yolo_deepsort.process_webcam_frame,
                 "model_file": "yolov8n.pt",  # Modelo padrão para YOLOv8DeepSort
             },
-            # Adicione outros modelos aqui
 
             "ContadorDePessoasEmVideo": {
                 "get_detectable_classes": lambda model_file: ["person"],  # Pode ser ["person"] ou []
@@ -41,8 +41,15 @@ class App:
                 "stop_processing": self.contador_stop_processing,
                 "process_webcam_frame": self.contador_process_webcam_frame,
                 "model_file": None,  # Não há arquivo de modelo específico
-    }
+            },
 
+            "FaceMash": {
+                "get_detectable_classes": lambda model_file: [],
+                "start_processing": self.face_mash_start_processing,
+                "stop_processing": self.face_mash_stop_processing,
+                "process_webcam_frame": self.face_mash_process_webcam_frame,
+                "model_file": None
+            }
 
         }
 
@@ -52,7 +59,13 @@ class App:
             gr.Markdown(
                 """
                 # Detecção e Rastreamento de Objetos
-                Baseado em OpenCV + YOLOv8 + DeepSort
+                Baseado em OpenCV + YOLOv8 + DeepSort \n
+
+                ContadorDePessoasEmVideo \n
+
+                FaceMash
+
+
                 """
             )
 
@@ -69,9 +82,9 @@ class App:
                 self.video_input = gr.Video(label="Vídeo de Entrada", visible=True)
                 self.webcam_input = WebRTC(
                     label="Webcam",
-                    mode="send-receive",
+
                     rtc_configuration={},
-                    visible=False,
+
                 )
 
             # Selecionar modelo
@@ -126,6 +139,7 @@ class App:
                 outputs=[
                     self.input_video_state,
                     self.options_column,
+                    self.options_column,
                     self.detect_class_dropdown,
                 ],
             )
@@ -174,7 +188,7 @@ class App:
                     self.detect_class_dropdown,
                     self.model_dropdown
                 ],
-                outputs=self.webcam_input,
+                outputs=[self.webcam_input],
             )
 
     def update_input_source_visibility(self, input_source):
@@ -184,22 +198,21 @@ class App:
             return gr.update(visible=False), gr.update(visible=True)
 
     def load_video_or_webcam(self, input_source, video_input, webcam_input, model_name):
-        # Armazena o vídeo no estado e torna as opções visíveis
         detect_classes = self.get_detect_classes(model_name)
-        if input_source == "Arquivo de Vídeo":
-            input_data = video_input
-        else:
-            input_data = webcam_input
+        input_data = video_input if input_source == "Arquivo de Vídeo" else webcam_input
+        # Evitar IndexError caso detect_classes esteja vazio
+        default_value = detect_classes[0] if detect_classes else None
         return (
             input_data,
             gr.update(visible=True),
-            gr.update(choices=detect_classes, value=detect_classes[0]),
+            gr.update(choices=detect_classes, value=default_value)
         )
 
     def update_detect_classes(self, model_name):
-        # Atualiza a lista de classes detectáveis ao mudar o modelo
         detect_classes = self.get_detect_classes(model_name)
-        return gr.update(choices=detect_classes, value=detect_classes[0])
+        # Evitar IndexError caso detect_classes esteja vazio
+        default_value = detect_classes[0] if detect_classes else None
+        return gr.update(choices=detect_classes, value=default_value)
 
     def get_detect_classes(self, model_name):
         # Obtém as classes detectáveis do modelo selecionado
@@ -300,9 +313,9 @@ class App:
             stop_processing_func = model_info["stop_processing"]
             stop_processing_func()
 
-    #########################################
+    # ========================================
     # Contador de Pessoas
-    #########################################
+    # ========================================
 
     def contador_stop_processing(self):
         # Similar ao YOLOv8DeepSort, apenas ajusta a variável global se existir
@@ -459,7 +472,91 @@ class App:
         # Por simplicidade, retornaremos o frame original ou algum processamento mínimo.
         return frame
 
+    # ========================================
+    # Funções necessárias para FaceMash:
+    # ========================================
 
+    def face_mash_stop_processing(self):
+        global should_continue
+        should_continue = False
+        return "Processamento interrompido."
+
+    def face_mash_start_processing(self, input_data, output_path, detect_class, model_file,
+                                   progress=gr.Progress(track_tqdm=True)):
+        global should_continue
+        should_continue = True
+
+        # Adaptado para vídeo fornecido pelo usuário (input_data é o caminho do vídeo)
+        if not isinstance(input_data, str) or not os.path.exists(input_data):
+            return None, None
+
+        cap = cv2.VideoCapture(input_data)
+        if not cap.isOpened():
+            print(f"Não foi possível abrir o vídeo: {input_data}")
+            return None, None
+
+        w = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        h = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        output_video_path = os.path.join(output_path, "output.mp4")
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        out = cv2.VideoWriter(output_video_path, fourcc, fps, (int(w), int(h)), True)
+
+        import mediapipe as mp
+        mp_drawing = mp.solutions.drawing_utils
+        mp_face_mesh = mp.solutions.face_mesh
+
+        with mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5) as facemesh:
+            while cap.isOpened() and should_continue:
+                ret, frame = cap.read()
+                if not ret:
+                    break
+
+                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                saida_facemesh = facemesh.process(frame_rgb)
+                frame_bgr = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR)
+
+                if saida_facemesh.multi_face_landmarks:
+                    for face_landmarks in saida_facemesh.multi_face_landmarks:
+                        mp_drawing.draw_landmarks(
+                            frame_bgr,
+                            face_landmarks,
+                            mp_face_mesh.FACEMESH_CONTOURS,
+                            landmark_drawing_spec=mp_drawing.DrawingSpec(color=(255, 102, 102), thickness=1,
+                                                                         circle_radius=1),
+                            connection_drawing_spec=mp_drawing.DrawingSpec(color=(102, 204, 0), thickness=1,
+                                                                           circle_radius=1)
+                        )
+
+                out.write(frame_bgr)
+
+        cap.release()
+        out.release()
+        return output_video_path, output_video_path
+
+    def face_mash_process_webcam_frame(self, frame, detect_class, model_file):
+        # Caso no futuro queira usar webcam, já está pronto. Mas com vídeo, não é chamado.
+        import mediapipe as mp
+        mp_drawing = mp.solutions.drawing_utils
+        mp_face_mesh = mp.solutions.face_mesh
+
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        with mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5) as facemesh:
+            saida_facemesh = facemesh.process(frame_rgb)
+            frame_bgr = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR)
+            if saida_facemesh.multi_face_landmarks:
+                for face_landmarks in saida_facemesh.multi_face_landmarks:
+                    mp_drawing.draw_landmarks(
+                        frame_bgr,
+                        face_landmarks,
+                        mp_face_mesh.FACEMESH_CONTOURS,
+                        landmark_drawing_spec=mp_drawing.DrawingSpec(color=(255, 102, 102), thickness=1,
+                                                                     circle_radius=1),
+                        connection_drawing_spec=mp_drawing.DrawingSpec(color=(102, 204, 0), thickness=1,
+                                                                       circle_radius=1)
+                    )
+
+        return cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
 
 
 if __name__ == "__main__":
