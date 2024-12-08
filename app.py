@@ -138,10 +138,9 @@ class App:
                 fn=self.load_video_or_webcam,
                 inputs=[self.input_source_radio, self.video_input, self.webcam_input, self.model_dropdown],
                 outputs=[
-                    self.input_video_state,
-                    self.options_column,
-                    self.options_column,
-                    self.detect_class_dropdown,
+                    self.input_video_state,  # recebe input_data
+                    self.options_column,  # recebe gr.update(visible=True)
+                    self.detect_class_dropdown  # recebe gr.update(choices=..., value=...)
                 ],
             )
 
@@ -202,12 +201,13 @@ class App:
         detect_classes = self.get_detect_classes(model_name)
         input_data = video_input if input_source == "Arquivo de Vídeo" else webcam_input
         # Evitar IndexError caso detect_classes esteja vazio
+        detect_classes = self.get_detect_classes(model_name)
         default_value = detect_classes[0] if detect_classes else None
+
         return (
-            input_data,
-            gr.update(visible=True),
-            gr.update(choices=detect_classes, value=default_value),
-            detect_classes
+            input_data,  # para self.input_video_state (um State, pode receber um valor simples)
+            gr.update(visible=True),  # para self.options_column (um Column, aceita visible)
+            gr.update(choices=detect_classes, value=default_value)  # para o Dropdown (accepta choices e value)
         )
 
     def update_detect_classes(self, model_name):
