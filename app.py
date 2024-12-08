@@ -1,3 +1,4 @@
+
 # app.py
 
 from ultralytics import YOLO
@@ -16,13 +17,13 @@ from gradio_webrtc import WebRTC
 # Importar o módulo yolo_deepsort completo
 from Modelos.YOLOv8DeepSortTracking import yolo_deepsort
 
-
 class App:
     def __init__(self):
         # Lista de modelos disponíveis
         self.model_list = ["YOLOv8DeepSort",
                            "ContadorDePessoasEmVideo",
                            "FaceMash"]  # Caso adicione outros modelos, inclua-os aqui
+
 
         # Mapeamento de funções por modelo
         self.model_functions = {
@@ -60,12 +61,12 @@ class App:
                 """
                 # Detecção e Rastreamento de Objetos
                 Baseado em OpenCV + YOLOv8 + DeepSort \n
-
+                
                 ContadorDePessoasEmVideo \n
-
+                
                 FaceMash
-
-
+                
+                
                 """
             )
 
@@ -205,7 +206,8 @@ class App:
         return (
             input_data,
             gr.update(visible=True),
-            gr.update(choices=detect_classes, value=default_value)
+            gr.update(choices=detect_classes, value=default_value),
+            default_value
         )
 
     def update_detect_classes(self, model_name):
@@ -313,9 +315,10 @@ class App:
             stop_processing_func = model_info["stop_processing"]
             stop_processing_func()
 
-    # ========================================
+    #========================================
     # Contador de Pessoas
-    # ========================================
+    #========================================
+
 
     def contador_stop_processing(self):
         # Similar ao YOLOv8DeepSort, apenas ajusta a variável global se existir
