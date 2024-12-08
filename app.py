@@ -207,7 +207,7 @@ class App:
             input_data,
             gr.update(visible=True),
             gr.update(choices=detect_classes, value=default_value),
-            default_value
+            detect_classes
         )
 
     def update_detect_classes(self, model_name):
