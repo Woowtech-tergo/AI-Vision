@@ -263,7 +263,7 @@ def process_webcam_frame(image, detect_class, model_file):
     total_count = len(unique_ids)
     putTextWithBackground(
         frame,
-        f"Total de objetos: {total_count}",
+        f"Total de Pessoas no Video: {total_count}",
         (10, 30),
         font_scale=1.0,
         text_color=(255, 255, 255),

@@ -16,15 +16,16 @@ from gradio_webrtc import WebRTC
 
 # Importar o módulo yolo_deepsort completo
 from Modelos.YOLOv8DeepSortTracking import yolo_deepsort
-import mediapipe as mp
+# import mediapipe as mp
 
 
 class App:
     def __init__(self):
         # Lista de modelos disponíveis
         self.model_list = ["YOLOv8DeepSort",
-                           "ContadorDePessoasEmVideo",
-                           "FaceMash"]  # Caso adicione outros modelos, inclua-os aqui
+                           "ContadorDePessoasEmVideo"
+                           ]
+
 
 
         # Mapeamento de funções por modelo
@@ -46,13 +47,13 @@ class App:
                 "model_file": None,  # Não há arquivo de modelo específico
             },
 
-            "FaceMash": {
-                "get_detectable_classes": lambda model_file: [],
-                "start_processing": self.face_mash_start_processing,
-                "stop_processing": self.face_mash_stop_processing,
-                "process_webcam_frame": self.face_mash_process_webcam_frame,
-                "model_file": None
-            }
+            # "FaceMash": {
+            #     "get_detectable_classes": lambda model_file: [],
+            #     "start_processing": self.face_mash_start_processing,
+            #     "stop_processing": self.face_mash_stop_processing,
+            #     "process_webcam_frame": self.face_mash_process_webcam_frame,
+            #     "model_file": None
+            # }
 
         }
 
@@ -478,7 +479,7 @@ class App:
         return frame
 
     # ========================================
-    # Funções necessárias para FaceMash:
+    # DESATIVADAS - Funções necessárias para FaceMash:
     # ========================================
 
     def face_mash_stop_processing(self):
