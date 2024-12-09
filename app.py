@@ -103,7 +103,7 @@ class App:
 
             # Botão para carregar o vídeo ou iniciar a webcam
             with gr.Row():
-                self.load_video_button = gr.Button("Carregar Vídeo / Iniciar Webcam")
+                self.load_video_button = gr.Button("Carregar Vídeo")
 
             # Após carregar o vídeo ou iniciar a webcam, mostram-se as opções adicionais
             with gr.Column(visible=False) as self.options_column:
