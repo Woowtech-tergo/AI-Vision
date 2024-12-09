@@ -194,7 +194,7 @@ def detect_and_track(input_path: str, output_path: str, detect_class_index: int,
         total_count = len(unique_ids)
         putTextWithBackground(
             frame,
-            f"Total de objetos: {total_count}",
+            f"Total de Pessoas No Video: {total_count}",
             (10, 30),
             font_scale=1.0,
             text_color=(255, 255, 255),
