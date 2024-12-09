@@ -4,7 +4,6 @@ ultralytics
 torch
 torchvision
 torchaudio
-opencv-python-headless==4.10.0.84
 opencv-contrib-python-headless===4.10.0.84
 matplotlib
 numpy
@@ -13,7 +12,7 @@ onnxruntime
 # onnxruntime-gpu
 twilio
 
-
+mediapipe==0.10.18
 
 # WebUI ---------------------------------------
 tqdm

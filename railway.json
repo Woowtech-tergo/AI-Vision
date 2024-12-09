@@ -10,23 +10,6 @@
             "glib",
             "gtk3",
             "libglvnd"
-          ],
-          "pythonDependencies": [
-            "mediapipe==0.10.18",
-            "ultralytics",
-            "torch",
-            "torchvision",
-            "torchaudio",
-            "matplotlib",
-            "numpy",
-            "scipy",
-            "opencv-contrib-python-headless==4.7.0.72",
-            "gradio==5.7.0"
-          ],
-          "cmds": [
-            "python3 -m pip install mediapipe==0.10.18",
-            "python3 -m pip uninstall -y opencv-python opencv-contrib-python",
-            "python3 -m pip install opencv-contrib-python-headless==4.7.0.72"
           ]
         }
       }
@@ -35,7 +18,4 @@
   "deploy": {
     "startCommand": "python3 app.py"
   }
-
 }
-
-
