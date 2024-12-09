@@ -331,11 +331,13 @@ class App:
 
     def contador_start_processing(self, input_data, output_path, detect_class, model_file,
                                   progress=gr.Progress(track_tqdm=True)):
-        # Adapte o código do countingPeople.py aqui para:
-        # - Ler o vídeo de input_data
-        # - Processar frames e contar as pessoas
-        # - Salvar o vídeo processado em output_path (por exemplo, output.mp4)
-        # - Retornar (output_video_path, output_video_path)
+
+        """   Adaptação do código do countingPeople.py:
+                  - Ler o vídeo de input_data
+                  - Processar frames e contar as pessoas
+                  - Salvar o vídeo processado em output_path (por exemplo, output.mp4)
+                  - Retornar (output_video_path, output_video_path)
+        """
 
         global should_continue
         should_continue = True
@@ -454,8 +456,8 @@ class App:
                         cv2.circle(frame, (cx, cy), 5, (0, 0, 255), -1)
                         img = cv2.rectangle(frame, (x, y), (x + w_box, y + h_box), (255, 0, 0), 2)
 
-            leftMsg = 'Left: ' + str(leftCounter)
-            rightMsg = 'Right: ' + str(rightCounter)
+            leftMsg = 'Esquerda: ' + str(leftCounter)
+            rightMsg = 'Direita: ' + str(rightCounter)
             frame = cv2.polylines(frame, [pts_L1], False, rightmostLineColor, thickness=2)
             frame = cv2.polylines(frame, [pts_L2], False, leftmostLineColor, thickness=2)
             frame = cv2.polylines(frame, [pts_L3], False, (255, 255, 255), thickness=1)
@@ -473,9 +475,8 @@ class App:
         return output_video_path, output_video_path
 
     def contador_process_webcam_frame(self, frame, detect_class, model_file):
-        # Caso queira processar frame a frame da webcam com o mesmo contador, é preciso adaptar o código
-        # do countingPeople para trabalhar frame a frame sem limites.
-        # Por simplicidade, retornaremos o frame original ou algum processamento mínimo.
+        """" Caso queira processar frame a frame da webcam com o mesmo contador, é preciso adaptar o código
+        do countingPeople para trabalhar frame a frame sem limites."""        
         return frame
 
     # ========================================
