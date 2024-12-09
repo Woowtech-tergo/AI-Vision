@@ -4,17 +4,17 @@
     "builder": "NIXPACKS",
     "nixpacks": {
       "phases": {
-        "install": {
+        "setup": {
           "nixPkgs": [
             "mesa",
             "glib",
             "gtk3",
             "libglvnd"
-          ],
-           "cmds": [
-            "python3 -m pip install --upgrade pip",
-            "python3 -m pip uninstall -y opencv-python opencv-contrib-python",
-            "python3 -m pip install opencv-contrib-python-headless==4.7.0.72"
+          ]
+        },
+        "install": {
+          "cmds": [
+            "pip install --no-cache-dir -r requirements.txt"
           ]
         }
       }
