@@ -76,7 +76,7 @@ class App:
             # Selecionar fonte de entrada
             with gr.Row():
                 self.input_source_radio = gr.Radio(
-                    choices=["Arquivo de Vídeo", "Webcam"],
+                    choices=["Arquivo de Vídeo"],  # Webcam
                     label="Fonte de Entrada",
                     value="Arquivo de Vídeo"
                 )
@@ -84,12 +84,12 @@ class App:
             # Carregar vídeo ou usar webcam
             with gr.Row():
                 self.video_input = gr.Video(label="Vídeo de Entrada", visible=True)
-                self.webcam_input = WebRTC(
-                    label="Webcam",
-
-                    rtc_configuration={},
-
-                )
+                # self.webcam_input = WebRTC(
+                #     label="Webcam",
+                #
+                #     rtc_configuration={},
+                #
+                # )
 
             # Selecionar modelo
             with gr.Row():
@@ -130,16 +130,17 @@ class App:
                         value="", visible=False
                     )
 
-            # Eventos
+            # Eventos - output opcional:  self.webcam_input
             self.input_source_radio.change(
                 fn=self.update_input_source_visibility,
                 inputs=[self.input_source_radio],
-                outputs=[self.video_input, self.webcam_input],
+                outputs=[self.video_input],
             )
 
+            # Parametro Opcional no Input: self.webcam_input
             self.load_video_button.click(
                 fn=self.load_video_or_webcam,
-                inputs=[self.input_source_radio, self.video_input, self.webcam_input, self.model_dropdown],
+                inputs=[self.input_source_radio, self.video_input, self.model_dropdown],
                 outputs=[
                     self.input_video_state,  # recebe input_data
                     self.options_column,  # recebe gr.update(visible=True)
@@ -184,15 +185,15 @@ class App:
             )
 
             # Se o usuário selecionou a webcam, processar frames em tempo real
-            self.webcam_input.stream(
-                fn=self.on_webcam_frame,
-                inputs=[
-                    self.webcam_input,
-                    self.detect_class_dropdown,
-                    self.model_dropdown
-                ],
-                outputs=[self.webcam_input],
-            )
+            # self.webcam_input.stream(
+            #     fn=self.on_webcam_frame,
+            #     inputs=[
+            #         self.webcam_input,
+            #         self.detect_class_dropdown,
+            #         self.model_dropdown
+            #     ],
+            #     outputs=[self.webcam_input],
+            # )
 
     def update_input_source_visibility(self, input_source):
         if input_source == "Arquivo de Vídeo":
@@ -200,9 +201,10 @@ class App:
         else:
             return gr.update(visible=False), gr.update(visible=True)
 
-    def load_video_or_webcam(self, input_source, video_input, webcam_input, model_name):
+    # Adicionar webcam_input quando necessario
+    def load_video_or_webcam(self, input_source, video_input,  model_name):
         detect_classes = self.get_detect_classes(model_name)
-        input_data = video_input if input_source == "Arquivo de Vídeo" else webcam_input
+        input_data = video_input if input_source == "Arquivo de Vídeo" else None # webcam_input
         # Evitar IndexError caso detect_classes esteja vazio
         detect_classes = self.get_detect_classes(model_name)
         default_value = detect_classes[0] if detect_classes else None
