@@ -16,6 +16,8 @@ from gradio_webrtc import WebRTC
 
 # Importar o módulo yolo_deepsort completo
 from Modelos.YOLOv8DeepSortTracking import yolo_deepsort
+import mediapipe as mp
+
 
 class App:
     def __init__(self):
@@ -505,7 +507,7 @@ class App:
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         out = cv2.VideoWriter(output_video_path, fourcc, fps, (int(w), int(h)), True)
 
-        import mediapipe as mp
+
         mp_drawing = mp.solutions.drawing_utils
         mp_face_mesh = mp.solutions.face_mesh
 
