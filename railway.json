@@ -24,8 +24,8 @@
             "gradio==5.7.0"
           ],
           "cmds": [
-            "pip uninstall -y opencv-python opencv-contrib-python",
-            "pip install opencv-contrib-python-headless==4.7.0.72"
+            "python3 -m pip uninstall -y opencv-python opencv-contrib-python",
+            "python3 -m pip install opencv-contrib-python-headless==4.7.0.72"
           ]
         }
       }
@@ -34,4 +34,7 @@
   "deploy": {
     "startCommand": "python3 app.py"
   }
+
 }
+
+
