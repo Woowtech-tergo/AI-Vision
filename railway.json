@@ -8,22 +8,24 @@
           "nixPkgs": [
             "mesa",
             "glib",
-                    "gtk3",
+            "gtk3",
             "libglvnd"
           ],
           "pythonDependencies": [
-            "opencv-contrib-python-headless==4.7.0.72",
-            "gradio==5.7.0",
+            "mediapipe==0.10.18",
             "ultralytics",
             "torch",
             "torchvision",
             "torchaudio",
             "matplotlib",
             "numpy",
-            "scipy"
+            "scipy",
+            "opencv-contrib-python-headless==4.7.0.72",
+            "gradio==5.7.0"
           ],
           "cmds": [
-            "pip install mediapipe==0.10.18 --no-deps"
+            "pip uninstall -y opencv-python opencv-contrib-python",
+            "pip install opencv-contrib-python-headless==4.7.0.72"
           ]
         }
       }
