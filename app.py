@@ -58,16 +58,21 @@ class App:
         }
 
         # Inicializa a interface Gradio
-        with gr.Blocks() as self.demo:
+        with gr.Blocks(
+                css=".gradio-container {background-color: #f000000; padding: 20px;}"
+
+        ) as self.demo:
+            gr.HTML("<h2 style='color:blue;'> Projeto de Contador usando Visão Computacional</h2>")
+
             # Título
             gr.Markdown(
                 """
                 # Detecção e Rastreamento de Objetos
-                Baseado em OpenCV + YOLOv8 + DeepSort \n
+                Modelo 1: Baseado em OpenCV + YOLOv8 + DeepSort \n
                 
-                ContadorDePessoasEmVideo \n
+                Modelo 2: ContadorDePessoasEmVideo \n
                 
-                FaceMash
+                
                 
                 
                 """
@@ -233,65 +238,46 @@ class App:
             return []
 
     def on_start_processing(self, input_source, input_data, detect_class, model_name):
-        # Processa o vídeo ou webcam
         model_info = self.model_functions.get(model_name)
         if model_info:
             start_processing_func = model_info["start_processing"]
             model_file = model_info["model_file"]
 
-            if input_source == "Arquivo de Vídeo":
-                # Processamento de arquivo de vídeo
-                start_time = time.time()
-                output_dir = os.path.join(os.getcwd(), 'outputs')
-                os.makedirs(output_dir, exist_ok=True)
+            # Como agora só existe a opção "Arquivo de Vídeo"
+            start_time = time.time()
+            output_dir = os.path.join(os.getcwd(), 'outputs')
+            os.makedirs(output_dir, exist_ok=True)
 
-                output_video_path, _ = start_processing_func(
-                    input_data, output_dir, detect_class, model_file
-                )
+            output_video_path, _ = start_processing_func(
+                input_data, output_dir, detect_class, model_file
+            )
 
-                end_time = time.time()
+            end_time = time.time()
+            output_video_path_str = str(output_video_path)
 
-                # Converte o Path para string
-                output_video_path_str = str(output_video_path)
+            processing_time = end_time - start_time
+            hours, rem = divmod(processing_time, 3600)
+            minutes, seconds = divmod(rem, 60)
+            time_str = f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}"
 
-                # Calcula o tempo de processamento
-                processing_time = end_time - start_time
-                hours, rem = divmod(processing_time, 3600)
-                minutes, seconds = divmod(rem, 60)
-                time_str = f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}"
-
-                # Obter o tamanho do arquivo
-                if os.path.exists(output_video_path_str):
-                    file_size = os.path.getsize(output_video_path_str)
-                    file_size_mb = file_size / (1024 * 1024)
-                    file_size_str = f"{file_size_mb:.2f} MB"
-                else:
-                    file_size_str = "Arquivo não encontrado"
-
-                # Atualiza a mensagem e torna o botão de download visível
-                processing_message = "Seu vídeo está pronto para download."
-                file_info = f"**Tamanho do arquivo:** {file_size_str}"
-
-                return (
-                    output_video_path_str,
-                    time_str,
-                    output_video_path_str,
-                    gr.update(value=processing_message, visible=True),
-                    gr.update(visible=True),
-                    gr.update(value=file_info, visible=True),
-                )
+            if os.path.exists(output_video_path_str):
+                file_size = os.path.getsize(output_video_path_str)
+                file_size_mb = file_size / (1024 * 1024)
+                file_size_str = f"{file_size_mb:.2f} MB"
             else:
-                # Processamento de webcam
-                processing_message = "Processando vídeo da webcam..."
-                file_info = ""
-                return (
-                    gr.update(visible=False),
-                    "",
-                    None,
-                    gr.update(value=processing_message, visible=True),
-                    gr.update(visible=False),
-                    gr.update(value=file_info, visible=False),
-                )
+                file_size_str = "Arquivo não encontrado"
+
+            processing_message = "Seu vídeo está pronto para download."
+            file_info = f"**Tamanho do arquivo:** {file_size_str}"
+
+            return (
+                gr.update(value=output_video_path_str),  # self.output_video atualiza com o caminho do vídeo
+                time_str,  # self.processing_time_label
+                output_video_path_str,  # self.output_video_path_state
+                gr.update(value=processing_message, visible=True),  # self.processing_message
+                gr.update(visible=True),  # self.download_button
+                gr.update(value=file_info, visible=True),  # self.file_info
+            )
         else:
             return None, "Modelo não encontrado", None, None, None, None
 
