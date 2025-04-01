@@ -72,9 +72,6 @@ class App:
                 
                 Modelo 2: ContadorDePessoasEmVideo \n
                 
-                
-                
-                
                 """
             )
 
