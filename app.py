@@ -58,30 +58,30 @@ class App:
         }
 
         # # Inicializa a interface Gradio
-        # with gr.Blocks(
-        #         css=".gradio-container {background-color: #f000000; padding: 20px;}"
-        #
-        # ) as self.demo:
-        #     gr.HTML("<h2 style='color:blue;'> Projeto de Contador usando Visão Computacional</h2>")
-        #
-        #     # Título
-        #     gr.Markdown(
-        #         """
-        #         # Detecção e Rastreamento de Objetos
-        #         Modelo 1: Baseado em OpenCV + YOLOv8 + DeepSort \n
-        #
-        #         Modelo 2: ContadorDePessoasEmVideo \n
-        #
-        #         """
-        #     )
-        #
-        #     # Selecionar fonte de entrada
-        #     with gr.Row():
-        #         self.input_source_radio = gr.Radio(
-        #             choices=["Arquivo de Vídeo"],  # Webcam
-        #             label="Fonte de Entrada",
-        #             value="Arquivo de Vídeo"
-        #         )
+        with gr.Blocks(
+                css=".gradio-container {background-color: #f000000; padding: 20px;}"
+
+        ) as self.demo:
+            gr.HTML("<h2 style='color:blue;'> Projeto de Contador usando Visão Computacional</h2>")
+
+            # Título
+            gr.Markdown(
+                """
+                # Detecção e Rastreamento de Objetos
+                Modelo 1: Baseado em OpenCV + YOLOv8 + DeepSort \n
+
+                Modelo 2: ContadorDePessoasEmVideo \n
+
+                """
+            )
+
+            # Selecionar fonte de entrada
+            with gr.Row():
+                self.input_source_radio = gr.Radio(
+                    choices=["Arquivo de Vídeo"],  # Webcam
+                    label="Fonte de Entrada",
+                    value="Arquivo de Vídeo"
+                )
         #
         #     # Carregar vídeo ou usar webcam
         #     with gr.Row():
