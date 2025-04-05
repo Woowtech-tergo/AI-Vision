@@ -99,13 +99,13 @@ class App:
                     choices=self.model_list, label="Modelo", value=self.model_list[0]
                 )
         #
-        #     # Estados para armazenar o vídeo de entrada e o caminho do vídeo processado
-        #     self.input_video_state = gr.State()
-        #     self.output_video_path_state = gr.State()
-        #
-        #     # Botão para carregar o vídeo ou iniciar a webcam
-        #     with gr.Row():
-        #         self.load_video_button = gr.Button("Carregar Vídeo")
+            # Estados para armazenar o vídeo de entrada e o caminho do vídeo processado
+            self.input_video_state = gr.State()
+            self.output_video_path_state = gr.State()
+
+            # Botão para carregar o vídeo ou iniciar a webcam
+            with gr.Row():
+                self.load_video_button = gr.Button("Carregar Vídeo")
         #
         #     # Após carregar o vídeo ou iniciar a webcam, mostram-se as opções adicionais
         #     with gr.Column(visible=False) as self.options_column:
