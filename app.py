@@ -319,15 +319,29 @@ class App:
         should_continue = False
         return "Processamento interrompido."
 
-    def contador_start_processing(self, input_data, output_path, detect_class, model_file,
-                                  progress=gr.Progress(track_tqdm=True)):
+        # ANTES:
+        # def contador_start_processing(self, input_data, output_path, detect_class, model_file,
+        #                               progress=gr.Progress(track_tqdm=True)):
 
-        """   Adaptação do código do countingPeople.py:
-                  - Ler o vídeo de input_data
-                  - Processar frames e contar as pessoas
-                  - Salvar o vídeo processado em output_path (por exemplo, output.mp4)
-                  - Retornar (output_video_path, output_video_path)
-        """
+        # DEPOIS (PARA TESTE):
+    def contador_start_processing(self, input_data, output_path, detect_class, model_file):
+        # --- IMPORTANTE ---
+        # Se você estava usando a variável 'progress' dentro desta função
+        # (por exemplo, chamando progress(0.5, desc="...")),
+        # você precisará comentar ou remover essas linhas também para este teste,
+        # pois a variável 'progress' não existirá mais.
+        # ---
+        global should_continue
+        should_continue = True
+
+        # Verifica se input_data é um arquivo de vídeo (string) ou outro tipo
+        # ... (resto do código da função permanece igual) ...
+
+        cap.release()
+        out.release()
+
+        return output_video_path, output_video_path
+
 
         global should_continue
         should_continue = True
