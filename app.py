@@ -57,145 +57,145 @@ class App:
 
         }
 
-        # Inicializa a interface Gradio
-        with gr.Blocks(
-                css=".gradio-container {background-color: #f000000; padding: 20px;}"
-
-        ) as self.demo:
-            gr.HTML("<h2 style='color:blue;'> Projeto de Contador usando Visão Computacional</h2>")
-
-            # Título
-            gr.Markdown(
-                """
-                # Detecção e Rastreamento de Objetos
-                Modelo 1: Baseado em OpenCV + YOLOv8 + DeepSort \n
-                
-                Modelo 2: ContadorDePessoasEmVideo \n
-                
-                """
-            )
-
-            # Selecionar fonte de entrada
-            with gr.Row():
-                self.input_source_radio = gr.Radio(
-                    choices=["Arquivo de Vídeo"],  # Webcam
-                    label="Fonte de Entrada",
-                    value="Arquivo de Vídeo"
-                )
-
-            # Carregar vídeo ou usar webcam
-            with gr.Row():
-                self.video_input = gr.Video(label="Vídeo de Entrada", visible=True)
-                # self.webcam_input = WebRTC(
-                #     label="Webcam",
-                #
-                #     rtc_configuration={},
-                #
-                # )
-
-            # Selecionar modelo
-            with gr.Row():
-                self.model_dropdown = gr.Dropdown(
-                    choices=self.model_list, label="Modelo", value=self.model_list[0]
-                )
-
-            # Estados para armazenar o vídeo de entrada e o caminho do vídeo processado
-            self.input_video_state = gr.State()
-            self.output_video_path_state = gr.State()
-
-            # Botão para carregar o vídeo ou iniciar a webcam
-            with gr.Row():
-                self.load_video_button = gr.Button("Carregar Vídeo")
-
-            # Após carregar o vídeo ou iniciar a webcam, mostram-se as opções adicionais
-            with gr.Column(visible=False) as self.options_column:
-                with gr.Row():
-                    self.detect_class_dropdown = gr.Dropdown(
-                        choices=[], label="Classe"
-                    )
-                with gr.Row():
-                    self.start_button = gr.Button("Iniciar Processamento")
-                    self.stop_button = gr.Button("Interromper Processamento")
-                with gr.Row():
-                    self.processing_message = gr.Textbox(
-                        label="Mensagem",
-                        visible=False
-                    )
-                with gr.Row():
-                    self.output_video = gr.Video(label="Vídeo Processado")
-                with gr.Row():
-                    self.download_button = gr.Button("Download", visible=False)
-                    self.processing_time_label = gr.Textbox(
-                        label="Tempo de Processamento"
-                    )
-                    self.file_info = gr.Markdown(
-                        value="", visible=False
-                    )
-
-            # Eventos - output opcional:  self.webcam_input
-            self.input_source_radio.change(
-                fn=self.update_input_source_visibility,
-                inputs=[self.input_source_radio],
-                outputs=[self.video_input],
-            )
-
-            # Parametro Opcional no Input: self.webcam_input
-            self.load_video_button.click(
-                fn=self.load_video_or_webcam,
-                inputs=[self.input_source_radio, self.video_input, self.model_dropdown],
-                outputs=[
-                    self.input_video_state,  # recebe input_data
-                    self.options_column,  # recebe gr.update(visible=True)
-                    self.detect_class_dropdown  # recebe gr.update(choices=..., value=...)
-                ],
-            )
-
-            self.model_dropdown.change(
-                fn=self.update_detect_classes,
-                inputs=[self.model_dropdown],
-                outputs=[self.detect_class_dropdown],
-            )
-
-            self.start_button.click(
-                fn=self.on_start_processing,
-                inputs=[
-                    self.input_source_radio,
-                    self.input_video_state,
-                    self.detect_class_dropdown,
-                    self.model_dropdown,
-                ],
-                outputs=[
-                    self.output_video,
-                    self.processing_time_label,
-                    self.output_video_path_state,
-                    self.processing_message,
-                    self.download_button,
-                    self.file_info,
-                ],
-            )
-
-            self.download_button.click(
-                fn=self.on_download_button_clicked,
-                inputs=[self.output_video_path_state],
-                outputs=gr.File(file_count="single"),
-            )
-
-            self.stop_button.click(
-                fn=self.on_stop_processing,
-                inputs=[],
-                outputs=[],
-            )
-
-            # Se o usuário selecionou a webcam, processar frames em tempo real
-            # self.webcam_input.stream(
-            #     fn=self.on_webcam_frame,
-            #     inputs=[
-            #         self.webcam_input,
-            #         self.detect_class_dropdown,
-            #         self.model_dropdown
-            #     ],
-            #     outputs=[self.webcam_input],
-            # )
+        # # Inicializa a interface Gradio
+        # with gr.Blocks(
+        #         css=".gradio-container {background-color: #f000000; padding: 20px;}"
+        #
+        # ) as self.demo:
+        #     gr.HTML("<h2 style='color:blue;'> Projeto de Contador usando Visão Computacional</h2>")
+        #
+        #     # Título
+        #     gr.Markdown(
+        #         """
+        #         # Detecção e Rastreamento de Objetos
+        #         Modelo 1: Baseado em OpenCV + YOLOv8 + DeepSort \n
+        #
+        #         Modelo 2: ContadorDePessoasEmVideo \n
+        #
+        #         """
+        #     )
+        #
+        #     # Selecionar fonte de entrada
+        #     with gr.Row():
+        #         self.input_source_radio = gr.Radio(
+        #             choices=["Arquivo de Vídeo"],  # Webcam
+        #             label="Fonte de Entrada",
+        #             value="Arquivo de Vídeo"
+        #         )
+        #
+        #     # Carregar vídeo ou usar webcam
+        #     with gr.Row():
+        #         self.video_input = gr.Video(label="Vídeo de Entrada", visible=True)
+        #         # self.webcam_input = WebRTC(
+        #         #     label="Webcam",
+        #         #
+        #         #     rtc_configuration={},
+        #         #
+        #         # )
+        #
+        #     # Selecionar modelo
+        #     with gr.Row():
+        #         self.model_dropdown = gr.Dropdown(
+        #             choices=self.model_list, label="Modelo", value=self.model_list[0]
+        #         )
+        #
+        #     # Estados para armazenar o vídeo de entrada e o caminho do vídeo processado
+        #     self.input_video_state = gr.State()
+        #     self.output_video_path_state = gr.State()
+        #
+        #     # Botão para carregar o vídeo ou iniciar a webcam
+        #     with gr.Row():
+        #         self.load_video_button = gr.Button("Carregar Vídeo")
+        #
+        #     # Após carregar o vídeo ou iniciar a webcam, mostram-se as opções adicionais
+        #     with gr.Column(visible=False) as self.options_column:
+        #         with gr.Row():
+        #             self.detect_class_dropdown = gr.Dropdown(
+        #                 choices=[], label="Classe"
+        #             )
+        #         with gr.Row():
+        #             self.start_button = gr.Button("Iniciar Processamento")
+        #             self.stop_button = gr.Button("Interromper Processamento")
+        #         with gr.Row():
+        #             self.processing_message = gr.Textbox(
+        #                 label="Mensagem",
+        #                 visible=False
+        #             )
+        #         with gr.Row():
+        #             self.output_video = gr.Video(label="Vídeo Processado")
+        #         with gr.Row():
+        #             self.download_button = gr.Button("Download", visible=False)
+        #             self.processing_time_label = gr.Textbox(
+        #                 label="Tempo de Processamento"
+        #             )
+        #             self.file_info = gr.Markdown(
+        #                 value="", visible=False
+        #             )
+        #
+        #     # Eventos - output opcional:  self.webcam_input
+        #     self.input_source_radio.change(
+        #         fn=self.update_input_source_visibility,
+        #         inputs=[self.input_source_radio],
+        #         outputs=[self.video_input],
+        #     )
+        #
+        #     # Parametro Opcional no Input: self.webcam_input
+        #     self.load_video_button.click(
+        #         fn=self.load_video_or_webcam,
+        #         inputs=[self.input_source_radio, self.video_input, self.model_dropdown],
+        #         outputs=[
+        #             self.input_video_state,  # recebe input_data
+        #             self.options_column,  # recebe gr.update(visible=True)
+        #             self.detect_class_dropdown  # recebe gr.update(choices=..., value=...)
+        #         ],
+        #     )
+        #
+        #     self.model_dropdown.change(
+        #         fn=self.update_detect_classes,
+        #         inputs=[self.model_dropdown],
+        #         outputs=[self.detect_class_dropdown],
+        #     )
+        #
+        #     self.start_button.click(
+        #         fn=self.on_start_processing,
+        #         inputs=[
+        #             self.input_source_radio,
+        #             self.input_video_state,
+        #             self.detect_class_dropdown,
+        #             self.model_dropdown,
+        #         ],
+        #         outputs=[
+        #             self.output_video,
+        #             self.processing_time_label,
+        #             self.output_video_path_state,
+        #             self.processing_message,
+        #             self.download_button,
+        #             self.file_info,
+        #         ],
+        #     )
+        #
+        #     self.download_button.click(
+        #         fn=self.on_download_button_clicked,
+        #         inputs=[self.output_video_path_state],
+        #         outputs=gr.File(file_count="single"),
+        #     )
+        #
+        #     self.stop_button.click(
+        #         fn=self.on_stop_processing,
+        #         inputs=[],
+        #         outputs=[],
+        #     )
+        #
+        #     # Se o usuário selecionou a webcam, processar frames em tempo real
+        #     # self.webcam_input.stream(
+        #     #     fn=self.on_webcam_frame,
+        #     #     inputs=[
+        #     #         self.webcam_input,
+        #     #         self.detect_class_dropdown,
+        #     #         self.model_dropdown
+        #     #     ],
+        #     #     outputs=[self.webcam_input],
+        #     # )
 
     def update_input_source_visibility(self, input_source):
         # Como "Arquivo de Vídeo" é a única opção e o valor padrão,
@@ -384,7 +384,6 @@ class App:
 
         # Retorno final (UMA VEZ, no fim da função)
         return output_video_path, output_video_path
-
 
 
     def contador_process_webcam_frame(self, frame, detect_class, model_file):
