@@ -4,3 +4,7 @@
 *.mp4
 *.avi
 *.pyc
+.git
+.gradio
+inputs/
+outputs/
