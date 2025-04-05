@@ -82,22 +82,22 @@ class App:
                     label="Fonte de Entrada",
                     value="Arquivo de Vídeo"
                 )
-        #
-        #     # Carregar vídeo ou usar webcam
-        #     with gr.Row():
-        #         self.video_input = gr.Video(label="Vídeo de Entrada", visible=True)
-        #         # self.webcam_input = WebRTC(
-        #         #     label="Webcam",
-        #         #
-        #         #     rtc_configuration={},
-        #         #
-        #         # )
-        #
-        #     # Selecionar modelo
-        #     with gr.Row():
-        #         self.model_dropdown = gr.Dropdown(
-        #             choices=self.model_list, label="Modelo", value=self.model_list[0]
-        #         )
+
+            # Carregar vídeo ou usar webcam
+            with gr.Row():
+                self.video_input = gr.Video(label="Vídeo de Entrada", visible=True)
+                # self.webcam_input = WebRTC(
+                #     label="Webcam",
+                #
+                #     rtc_configuration={},
+                #
+                # )
+
+            # Selecionar modelo
+            with gr.Row():
+                self.model_dropdown = gr.Dropdown(
+                    choices=self.model_list, label="Modelo", value=self.model_list[0]
+                )
         #
         #     # Estados para armazenar o vídeo de entrada e o caminho do vídeo processado
         #     self.input_video_state = gr.State()
