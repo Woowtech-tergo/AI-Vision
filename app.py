@@ -18,7 +18,7 @@ from gradio_webrtc import WebRTC
 from Modelos.YOLOv8DeepSortTracking import yolo_deepsort
 # import mediapipe as mp
 
-
+# testing git
 class App:
     def __init__(self):
         # Lista de modelos disponíveis
@@ -198,10 +198,15 @@ class App:
             # )
 
     def update_input_source_visibility(self, input_source):
+        # Como "Arquivo de Vídeo" é a única opção e o valor padrão,
+        # esta função pode simplesmente garantir que o input de vídeo esteja visível.
+        # Ou, se você quiser manter a lógica caso adicione a webcam de volta:
         if input_source == "Arquivo de Vídeo":
-            return gr.update(visible=True), gr.update(visible=False)
-        else:
-            return gr.update(visible=False), gr.update(visible=True)
+            return gr.update(visible=True)  # Retorna apenas UM update para video_input
+        # else: # Se a webcam fosse uma opção
+        # return gr.update(visible=False)
+        # Dado o estado atual (apenas vídeo), podemos simplificar para:
+        return gr.update(visible=True)
 
     # Adicionar webcam_input quando necessario
     def load_video_or_webcam(self, input_source, video_input,  model_name):
