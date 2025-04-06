@@ -113,25 +113,25 @@ class App:
                     self.detect_class_dropdown = gr.Dropdown(
                         choices=[], label="Classe"
                     )
-        #         with gr.Row():
-        #             self.start_button = gr.Button("Iniciar Processamento")
-        #             self.stop_button = gr.Button("Interromper Processamento")
-        #         with gr.Row():
-        #             self.processing_message = gr.Textbox(
-        #                 label="Mensagem",
-        #                 visible=False
-        #             )
-        #         with gr.Row():
-        #             self.output_video = gr.Video(label="Vídeo Processado")
-        #         with gr.Row():
-        #             self.download_button = gr.Button("Download", visible=False)
-        #             self.processing_time_label = gr.Textbox(
-        #                 label="Tempo de Processamento"
-        #             )
-        #             self.file_info = gr.Markdown(
-        #                 value="", visible=False
-        #             )
-        #
+                with gr.Row():
+                    self.start_button = gr.Button("Iniciar Processamento")
+                    self.stop_button = gr.Button("Interromper Processamento")
+                with gr.Row():
+                    self.processing_message = gr.Textbox(
+                        label="Mensagem",
+                        visible=False
+                    )
+                with gr.Row():
+                    self.output_video = gr.Video(label="Vídeo Processado")
+                with gr.Row():
+                    self.download_button = gr.Button("Download", visible=False)
+                    self.processing_time_label = gr.Textbox(
+                        label="Tempo de Processamento"
+                    )
+                    self.file_info = gr.Markdown(
+                        value="", visible=False
+                    )
+
         #     # Eventos - output opcional:  self.webcam_input
         #     self.input_source_radio.change(
         #         fn=self.update_input_source_visibility,
