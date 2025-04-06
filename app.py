@@ -107,12 +107,12 @@ class App:
             with gr.Row():
                 self.load_video_button = gr.Button("Carregar Vídeo")
         #
-        #     # Após carregar o vídeo ou iniciar a webcam, mostram-se as opções adicionais
-        #     with gr.Column(visible=False) as self.options_column:
-        #         with gr.Row():
-        #             self.detect_class_dropdown = gr.Dropdown(
-        #                 choices=[], label="Classe"
-        #             )
+            # Após carregar o vídeo ou iniciar a webcam, mostram-se as opções adicionais
+            with gr.Column(visible=False) as self.options_column:
+                with gr.Row():
+                    self.detect_class_dropdown = gr.Dropdown(
+                        choices=[], label="Classe"
+                    )
         #         with gr.Row():
         #             self.start_button = gr.Button("Iniciar Processamento")
         #             self.stop_button = gr.Button("Interromper Processamento")
