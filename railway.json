@@ -17,7 +17,7 @@
         },
         "install": {
           "cmds": [
-            "# Certifique-se que 'streamlit' está no requirements.txt",
+
             "pip install --no-cache-dir -r requirements.txt",
             "pip uninstall -y opencv-python opencv-contrib-python",
             "pip install opencv-contrib-python-headless==4.7.0.72"
