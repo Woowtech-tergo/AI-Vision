@@ -132,23 +132,23 @@ class App:
                         value="", visible=False
                     )
 
-        #     # Eventos - output opcional:  self.webcam_input
-        #     self.input_source_radio.change(
-        #         fn=self.update_input_source_visibility,
-        #         inputs=[self.input_source_radio],
-        #         outputs=[self.video_input],
-        #     )
-        #
-        #     # Parametro Opcional no Input: self.webcam_input
-        #     self.load_video_button.click(
-        #         fn=self.load_video_or_webcam,
-        #         inputs=[self.input_source_radio, self.video_input, self.model_dropdown],
-        #         outputs=[
-        #             self.input_video_state,  # recebe input_data
-        #             self.options_column,  # recebe gr.update(visible=True)
-        #             self.detect_class_dropdown  # recebe gr.update(choices=..., value=...)
-        #         ],
-        #     )
+            # Eventos - output opcional:  self.webcam_input
+            self.input_source_radio.change(
+                fn=self.update_input_source_visibility,
+                inputs=[self.input_source_radio],
+                outputs=[self.video_input],
+            )
+
+            # Parametro Opcional no Input: self.webcam_input
+            self.load_video_button.click(
+                fn=self.load_video_or_webcam,
+                inputs=[self.input_source_radio, self.video_input, self.model_dropdown],
+                outputs=[
+                    self.input_video_state,  # recebe input_data
+                    self.options_column,  # recebe gr.update(visible=True)
+                    self.detect_class_dropdown  # recebe gr.update(choices=..., value=...)
+                ],
+            )
         #
         #     self.model_dropdown.change(
         #         fn=self.update_detect_classes,
