@@ -17,7 +17,6 @@ st.set_page_config(
 )
 
 # --- Importações dos Modelos e Lógica de Processamento ---
-# Mantenha seus imports aqui, ajustando os caminhos conforme sua estrutura
 # Adicionada verificação para evitar crash se import falhar
 try:
     from ultralytics import YOLO
@@ -294,7 +293,7 @@ def contador_stop_processing():
     print("Flag 'should_continue' setada para False (tentativa de parada).")
 
 # =====================================
-# Dicionário de Funções (como no seu exemplo)
+# Dicionário de Funções
 # =====================================
 model_functions = {
     "YOLOv8DeepSort": {
