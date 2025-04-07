@@ -156,35 +156,35 @@ class App:
                 outputs=[self.detect_class_dropdown],
             )
         #
-        #     self.start_button.click(
-        #         fn=self.on_start_processing,
-        #         inputs=[
-        #             self.input_source_radio,
-        #             self.input_video_state,
-        #             self.detect_class_dropdown,
-        #             self.model_dropdown,
-        #         ],
-        #         outputs=[
-        #             self.output_video,
-        #             self.processing_time_label,
-        #             self.output_video_path_state,
-        #             self.processing_message,
-        #             self.download_button,
-        #             self.file_info,
-        #         ],
-        #     )
-        #
-        #     self.download_button.click(
-        #         fn=self.on_download_button_clicked,
-        #         inputs=[self.output_video_path_state],
-        #         outputs=gr.File(file_count="single"),
-        #     )
-        #
-        #     self.stop_button.click(
-        #         fn=self.on_stop_processing,
-        #         inputs=[],
-        #         outputs=[],
-        #     )
+            self.start_button.click(
+                fn=self.on_start_processing,
+                inputs=[
+                    self.input_source_radio,
+                    self.input_video_state,
+                    self.detect_class_dropdown,
+                    self.model_dropdown,
+                ],
+                outputs=[
+                    self.output_video,
+                    self.processing_time_label,
+                    self.output_video_path_state,
+                    self.processing_message,
+                    self.download_button,
+                    self.file_info,
+                ],
+            )
+
+            self.download_button.click(
+                fn=self.on_download_button_clicked,
+                inputs=[self.output_video_path_state],
+                outputs=gr.File(file_count="single"),
+            )
+
+            self.stop_button.click(
+                fn=self.on_stop_processing,
+                inputs=[],
+                outputs=[],
+            )
         #
         #     # Se o usuário selecionou a webcam, processar frames em tempo real
         #     # self.webcam_input.stream(
