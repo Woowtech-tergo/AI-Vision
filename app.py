@@ -132,13 +132,13 @@ class App:
                         value="", visible=False
                     )
 
-            # Eventos - output opcional:  self.webcam_input
-            self.input_source_radio.change(
-                fn=self.update_input_source_visibility,
-                inputs=[self.input_source_radio],
-                outputs=[self.video_input],
-            )
-
+        #     # Eventos - output opcional:  self.webcam_input
+        #     self.input_source_radio.change(
+        #         fn=self.update_input_source_visibility,
+        #         inputs=[self.input_source_radio],
+        #         outputs=[self.video_input],
+        #     )
+        #
         #     # Parametro Opcional no Input: self.webcam_input
         #     self.load_video_button.click(
         #         fn=self.load_video_or_webcam,
@@ -150,11 +150,11 @@ class App:
         #         ],
         #     )
         #
-        #     self.model_dropdown.change(
-        #         fn=self.update_detect_classes,
-        #         inputs=[self.model_dropdown],
-        #         outputs=[self.detect_class_dropdown],
-        #     )
+            self.model_dropdown.change(
+                fn=self.update_detect_classes,
+                inputs=[self.model_dropdown],
+                outputs=[self.detect_class_dropdown],
+            )
         #
         #     self.start_button.click(
         #         fn=self.on_start_processing,
