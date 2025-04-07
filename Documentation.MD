@@ -23,7 +23,7 @@ Desenvolver uma plataforma modular e escalável que permita a integração de di
 Para executar a interface Gradio, utilize o seguinte comando:
 
 ```bash
-python app.py
+python app_deprecated.py
 ```
 
 ### OpenCV
@@ -98,7 +98,7 @@ Atualmente, o desenvolvimento em produção está hospedado no servidor **Railwa
 4. **Executar a Aplicação:**
 
    ```bash
-   python app.py
+   python app_deprecated.py
    ```
 
 5. **Acessar a Interface:**

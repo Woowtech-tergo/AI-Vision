@@ -15,5 +15,4 @@ twilio
 
 # WebUI ---------------------------------------
 tqdm
-gradio==5.7.0
-gradio-webrtc
+streamlit==1.44.1

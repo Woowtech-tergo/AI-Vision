@@ -1,4 +1,4 @@
-# app.py
+# app_deprecated.py
 
 from ultralytics import YOLO
 import cv2
